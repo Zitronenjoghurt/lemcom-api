@@ -1,3 +1,8 @@
+#[path ="./database"]
+pub mod database {
+    pub mod db;
+}
+
 #[path ="./models"]
 pub mod models {
     pub mod base_models;
