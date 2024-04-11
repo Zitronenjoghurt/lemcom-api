@@ -5,7 +5,7 @@ use axum::{
         request::Parts, HeaderName, StatusCode
     }
 };
-use crate::models::user::User;
+use crate::api::models::user::User;
 
 pub struct ExtractUser(pub User);
 
@@ -25,7 +25,7 @@ where
             .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid API key format"))?;
         
         let user = fetch_user_by_api_key(api_key).await
-            .map_err(|_| (StatusCode::UNAUTHORIZED, "API key not found"))?;
+            .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid API key"))?;
         
         Ok(ExtractUser(user))
     }

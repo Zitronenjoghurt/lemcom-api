@@ -1,7 +1,6 @@
 use axum::Router;
-mod security;
-mod models;
-mod resources;
+mod api;
+use crate::api::resources;
 
 #[tokio::main]
 async fn main() {
