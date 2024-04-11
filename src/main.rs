@@ -1,4 +1,5 @@
 use axum::Router;
+mod security;
 mod models;
 mod resources;
 
