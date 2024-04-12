@@ -11,7 +11,7 @@ async fn main() {
     let shared_db = Arc::new(Mutex::new(db));
 
     let app = Router::new()
-        .nest("/ping", resources::ping::router())
+        .nest("/", resources::ping::router())
         .layer(Extension(shared_db));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

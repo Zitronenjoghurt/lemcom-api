@@ -13,7 +13,7 @@ pub async fn setup() -> Result<DB> {
     let mongo_url = "mongodb://localhost:27017";
     let client_options = ClientOptions::parse(mongo_url).await?;
     let client = Client::with_options(client_options)?;
-    let db = client.database("your_database_name");
+    let db = client.database("LemCom");
 
     Ok(DB {
         client,

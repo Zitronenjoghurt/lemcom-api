@@ -6,9 +6,9 @@ use axum::{
 use crate::api::models::base_models::MessageResponse;
 use crate::api::security::authentication::ExtractUser;
 
-async fn get_ping(ExtractUser(user): ExtractUser) -> Json<MessageResponse> {
+async fn get_ping(ExtractUser(_): ExtractUser) -> Json<MessageResponse> {
     let response = MessageResponse {
-        message: user.key.to_string(),
+        message: "Pong".to_string(),
     };
     Json(response)
 }

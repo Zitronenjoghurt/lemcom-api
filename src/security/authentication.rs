@@ -7,7 +7,7 @@ use axum::{
     }, Extension
 };
 use tokio::sync::Mutex;
-use crate::api::{database::db::DB, models::user};
+use crate::api::{database::db::DB, models::user, utils::time_operations::timestamp_now_micro};
 
 pub struct ExtractUser(pub user::User);
 
@@ -31,10 +31,15 @@ where
             .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid API key format"))?;
         
         let db_lock = db.lock().await;
-        let user = user::find_user_by_key(&db_lock.user_collection, api_key).await
+        let mut user = user::find_user_by_key(&db_lock.user_collection, api_key).await
             .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "An error occured while trying to fetch user"))?
             .ok_or((StatusCode::UNAUTHORIZED, "Invalid API key"))?;
-        
+
+        user.last_access_stamp = timestamp_now_micro();
+        user.save(&db_lock.user_collection)
+            .await
+            .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "An error occured while trying to save user"))?;
+
         Ok(ExtractUser(user))
     }
 }

@@ -1,17 +1,32 @@
-use mongodb::{bson::doc, Collection};
+use mongodb::{bson::{self, doc}, options::UpdateOptions, Collection};
 use serde::{ Deserialize, Serialize };
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
     pub key: String,
     pub name: String,
-    pub display_name: String
+    pub display_name: String,
+    pub created_stamp: u64,
+    pub last_access_stamp: u64,
+    //pub endpoint_usage: HashMap<String, u64>
 }
 
-pub async fn insert_user(collection: &Collection<User>, user: User) -> mongodb::error::Result<()> {
-    collection.insert_one(user, None).await?;
-    println!("User added.");
-    Ok(())
+impl User {
+    pub async fn save(&self, collection: &Collection<User>) -> mongodb::error::Result<()> {
+        let filter = doc! { "key": &self.key };
+        let update = doc! { "$set": bson::to_bson(self)? };
+        let options = UpdateOptions::builder().upsert(true).build();
+
+        collection.update_one(filter, update, Some(options)).await?;
+        println!("User saved.");
+        Ok(())
+    }
+
+    /*
+    pub fn use_endpoint(&mut self, endpoint_name: &str) {
+        *self.endpoint_usage.entry(endpoint_name.to_string()).or_insert(0) += 1;
+    }
+    */
 }
 
 pub async fn find_user_by_key(collection: &Collection<User>, key: &str) -> mongodb::error::Result<Option<User>> {
