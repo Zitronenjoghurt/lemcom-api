@@ -1,15 +1,22 @@
 use mongodb::{
-    Client,
-    error::Result,
-    options::ClientOptions
+    error::Result, options::ClientOptions, Client, Collection
 };
 
-pub async fn setup() -> Result<Client> {
-    let mongo_url: &str = "mongodb://localhost:27017";
+use crate::api::models::user::User;
 
-    let mut client_options: ClientOptions = ClientOptions::parse(mongo_url).await?;
-    client_options.app_name = Some("LemCom".to_string());
+pub struct DB {
+    pub client: Client,
+    pub user_collection: Collection<User>
+}
 
+pub async fn setup() -> Result<DB> {
+    let mongo_url = "mongodb://localhost:27017";
+    let client_options = ClientOptions::parse(mongo_url).await?;
     let client = Client::with_options(client_options)?;
-    Ok(client)
+    let db = client.database("your_database_name");
+
+    Ok(DB {
+        client,
+        user_collection: db.collection::<User>("users"),
+    })
 }
