@@ -1,6 +1,8 @@
+use dotenv::dotenv;
 use mongodb::{
     error::Result, options::ClientOptions, Client, Collection
 };
+use std::env;
 
 use crate::api::models::user::User;
 
@@ -10,7 +12,8 @@ pub struct DB {
 }
 
 pub async fn setup() -> Result<DB> {
-    let mongo_url = "mongodb://localhost:27017";
+    dotenv().ok();
+    let mongo_url = env::var("DB_URL").expect("DB URL not set.");
     let client_options = ClientOptions::parse(mongo_url).await?;
     let client = Client::with_options(client_options)?;
     let db = client.database("LemCom");
