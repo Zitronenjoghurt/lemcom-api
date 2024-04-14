@@ -9,7 +9,7 @@ pub struct UserName {
 impl UserName {
     pub fn sanitize(&self) -> UserName {
         UserName {
-            name: sanitize::alphanumeric(self.name.clone()),
+            name: sanitize::alphanumeric(&self.name),
         }
     }
 }

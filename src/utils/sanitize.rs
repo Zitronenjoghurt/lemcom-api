@@ -1,6 +1,14 @@
-use regex::Regex;
+pub fn alphanumeric(input: &str) -> String {
+    input
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric())
+        .collect()
+}
 
-pub fn alphanumeric(input: String) -> String {
-    let re = Regex::new(r"[^a-zA-Z0-9]").unwrap();
-    re.replace_all(&input, "").to_string()
+#[test]
+fn a() {
+    assert_eq!(
+        "abcdefghigklmnopqrstuvwxyzABCDEFGHIGKLMNOPQRSTUVWXYZ0123456789",
+        alphanumeric("abcdefghigklmnopqrstuvwxyz 😃 ABCDEFGHIGKLMNOPQRSTUVWXYZ >-< 0123456789")
+    );
 }
