@@ -8,8 +8,8 @@ pub struct UserName {
 
 impl UserName {
     pub fn sanitize(&self) -> UserName {
-        return UserName {
+        UserName {
             name: sanitize::alphanumeric(self.name.clone()),
-        };
+        }
     }
 }

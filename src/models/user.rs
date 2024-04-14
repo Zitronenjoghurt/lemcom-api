@@ -51,7 +51,7 @@ impl User {
         for (_, value) in self.endpoint_usage.iter() {
             sum += value;
         }
-        return sum;
+        sum
     }
 
     pub fn private_information(&self) -> UserPrivateInformation {
