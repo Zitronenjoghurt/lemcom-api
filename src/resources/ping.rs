@@ -1,5 +1,5 @@
-use crate::api::models::response_models::MessageResponse;
 use crate::api::security::authentication::ExtractUser;
+use crate::{api::models::response_models::MessageResponse, AppStateInner};
 use axum::{routing::get, Json, Router};
 
 async fn get_ping(ExtractUser(_): ExtractUser) -> Json<MessageResponse> {
@@ -9,6 +9,6 @@ async fn get_ping(ExtractUser(_): ExtractUser) -> Json<MessageResponse> {
     Json(response)
 }
 
-pub fn router() -> Router {
+pub fn router() -> Router<AppStateInner> {
     Router::new().route("/", get(get_ping))
 }

@@ -1,31 +1,24 @@
-use crate::api::{database::db::DB, models::user, utils::route_capture::RoutePath};
+use crate::{
+    api::{models::user, utils::route_capture::RoutePath},
+    AppStateInner,
+};
 use axum::{
     async_trait,
     extract::FromRequestParts,
     http::{request::Parts, HeaderName, StatusCode},
-    Extension,
 };
-use tokio::sync::RwLock;
 
 pub struct ExtractUser(pub user::User);
 
 #[async_trait]
-impl<S> FromRequestParts<S> for ExtractUser
-where
-    S: Send + Sync,
-{
+impl FromRequestParts<AppStateInner> for ExtractUser {
     type Rejection = (StatusCode, &'static str);
 
-    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        let Extension(db) = Extension::<&'static RwLock<DB>>::from_request_parts(parts, state)
-            .await
-            .map_err(|_| {
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "An error occured while trying to access database",
-                )
-            })?;
-        let db = db.read().await;
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppStateInner,
+    ) -> Result<Self, Self::Rejection> {
+        let db = state.read().await;
 
         let api_key_header = HeaderName::from_static("x-api-key");
         let api_key = parts
