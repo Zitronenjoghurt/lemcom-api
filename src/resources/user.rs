@@ -2,6 +2,7 @@ use crate::api::models::{query_models::UserName, response_models::UserPrivateInf
 use crate::api::security::authentication::ExtractUser;
 use crate::{AppState, AppStateInner};
 use axum::extract::State;
+use axum::response::Response;
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 
 async fn get_user(ExtractUser(user): ExtractUser) -> Json<UserPrivateInformation> {
@@ -12,7 +13,7 @@ async fn get_user_search(
     ExtractUser(_): ExtractUser,
     State(state): AppState,
     query: Query<UserName>,
-) -> impl IntoResponse {
+) -> Response {
     let query = query.sanitize();
     match user::find_user_by_name(&state.user_collection, &query.name).await {
         Ok(Some(user)) => Json(user.public_information()).into_response(),
