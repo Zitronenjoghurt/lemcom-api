@@ -2,6 +2,7 @@ use api::database::db::DB;
 use axum::extract::State;
 use axum::Router;
 use std::io;
+use std::net::Ipv4Addr;
 
 mod api;
 
@@ -23,6 +24,6 @@ async fn main() -> io::Result<()> {
         .nest("/user", resources::user::router())
         .with_state(shared_db);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
+    let listener = tokio::net::TcpListener::bind((Ipv4Addr::new(0, 0, 0, 0), 3000)).await?;
     axum::serve(listener, app).await
 }
