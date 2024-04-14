@@ -9,7 +9,7 @@ pub struct DB {
 }
 
 pub async fn setup() -> Result<DB> {
-    dotenvy::dotenv().ok();
+    dotenvy::dotenv().expect("Failed to load the .env file");
     let mongo_url = env::var("DB_URL").expect("DB URL not set.");
     let client_options = ClientOptions::parse(mongo_url).await?;
     let client = Client::with_options(client_options)?;
