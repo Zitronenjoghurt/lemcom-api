@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::api::database::db::DB;
 use crate::api::models::{query_models::UserName, response_models::UserPrivateInformation, user};
 use crate::api::security::authentication::ExtractUser;
@@ -14,7 +12,7 @@ async fn get_user(ExtractUser(user): ExtractUser) -> Json<UserPrivateInformation
 
 async fn get_user_search(
     ExtractUser(_): ExtractUser,
-    Extension(db): Extension<Arc<RwLock<DB>>>,
+    Extension(db): Extension<&'static RwLock<DB>>,
     query: Query<UserName>,
 ) -> impl IntoResponse {
     let query = query.sanitize();

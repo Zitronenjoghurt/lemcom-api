@@ -5,7 +5,6 @@ use axum::{
     http::{request::Parts, HeaderName, StatusCode},
     Extension,
 };
-use std::sync::Arc;
 use tokio::sync::RwLock;
 
 pub struct ExtractUser(pub user::User);
@@ -18,7 +17,7 @@ where
     type Rejection = (StatusCode, &'static str);
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        let Extension(db) = Extension::<Arc<RwLock<DB>>>::from_request_parts(parts, state)
+        let Extension(db) = Extension::<&'static RwLock<DB>>::from_request_parts(parts, state)
             .await
             .map_err(|_| {
                 (
