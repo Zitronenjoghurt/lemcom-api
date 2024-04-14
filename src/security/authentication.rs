@@ -18,8 +18,6 @@ impl FromRequestParts<AppStateInner> for ExtractUser {
         parts: &mut Parts,
         state: &AppStateInner,
     ) -> Result<Self, Self::Rejection> {
-        let db = state.read().await;
-
         let api_key_header = HeaderName::from_static("x-api-key");
         let api_key = parts
             .headers
@@ -28,7 +26,7 @@ impl FromRequestParts<AppStateInner> for ExtractUser {
             .to_str()
             .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid API key format"))?;
 
-        let mut user = user::find_user_by_key(&db.user_collection, api_key)
+        let mut user = user::find_user_by_key(&state.user_collection, api_key)
             .await
             .map_err(|_| {
                 (
@@ -44,7 +42,7 @@ impl FromRequestParts<AppStateInner> for ExtractUser {
             .ok_or((StatusCode::INTERNAL_SERVER_ERROR, "Route path missing"))?;
 
         user.use_endpoint(&route_path.as_str());
-        user.save(&db.user_collection).await.map_err(|_| {
+        user.save(&state.user_collection).await.map_err(|_| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "An error occured while trying to save user",

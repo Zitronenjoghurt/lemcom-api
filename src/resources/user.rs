@@ -10,12 +10,11 @@ async fn get_user(ExtractUser(user): ExtractUser) -> Json<UserPrivateInformation
 
 async fn get_user_search(
     ExtractUser(_): ExtractUser,
-    State(db): AppState,
+    State(state): AppState,
     query: Query<UserName>,
 ) -> impl IntoResponse {
     let query = query.sanitize();
-    let db = db.read().await;
-    match user::find_user_by_name(&db.user_collection, &query.name).await {
+    match user::find_user_by_name(&state.user_collection, &query.name).await {
         Ok(Some(user)) => Json(user.public_information()).into_response(),
         Ok(None) => (StatusCode::NOT_FOUND, "User not found").into_response(),
         Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Database error").into_response(),
