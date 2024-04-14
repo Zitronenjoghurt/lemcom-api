@@ -1,7 +1,4 @@
-use crate::{
-    api::{models::user, utils::route_capture::RoutePath},
-    AppStateInner,
-};
+use crate::{api::models::user, AppStateInner};
 use axum::{
     async_trait,
     extract::FromRequestParts,
@@ -36,12 +33,10 @@ impl FromRequestParts<AppStateInner> for ExtractUser {
             })?
             .ok_or((StatusCode::UNAUTHORIZED, "Invalid API key"))?;
 
-        let route_path = parts
-            .extensions
-            .get::<RoutePath>()
-            .ok_or((StatusCode::INTERNAL_SERVER_ERROR, "Route path missing"))?;
+        let method = parts.method.as_str();
+        let path = parts.uri.path();
 
-        user.use_endpoint(&route_path.as_str());
+        user.use_endpoint(method, path);
         user.save(&state.user_collection).await.map_err(|_| {
             (
                 StatusCode::INTERNAL_SERVER_ERROR,

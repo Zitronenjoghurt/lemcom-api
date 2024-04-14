@@ -1,12 +1,11 @@
 use api::database::db::DB;
 use axum::extract::State;
-use axum::{middleware, Router};
+use axum::Router;
 
 mod api;
 
 use crate::api::database::db;
 use crate::api::resources;
-use crate::api::utils::route_capture::capture_route;
 
 type AppStateInner = &'static DB;
 type AppState = State<AppStateInner>;
@@ -21,7 +20,6 @@ async fn main() {
     let app = Router::new()
         .nest("/", resources::ping::router())
         .nest("/user", resources::user::router())
-        .route_layer(middleware::from_fn(capture_route))
         .with_state(shared_db);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
