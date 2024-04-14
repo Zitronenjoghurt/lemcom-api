@@ -25,5 +25,7 @@ async fn main() -> io::Result<()> {
         .with_state(shared_db);
 
     let listener = tokio::net::TcpListener::bind((Ipv4Addr::new(0, 0, 0, 0), 3000)).await?;
+    println!("Listening on {}", listener.local_addr()?);
+
     axum::serve(listener, app).await
 }
