@@ -47,11 +47,7 @@ impl User {
     }
 
     pub fn request_count(&self) -> u64 {
-        let mut sum: u64 = 0;
-        for (_, value) in self.endpoint_usage.iter() {
-            sum += value;
-        }
-        sum
+        self.endpoint_usage.values().sum()
     }
 
     pub fn private_information(&self) -> UserPrivateInformation {
