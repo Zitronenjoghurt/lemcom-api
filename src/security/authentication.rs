@@ -7,7 +7,7 @@ use axum::{
     }, Extension
 };
 use tokio::sync::RwLock;
-use crate::api::{database::db::DB, models::user, utils::time_operations::timestamp_now_micro};
+use crate::api::{database::db::DB, models::user, utils::route_capture::RoutePath};
 
 pub struct ExtractUser(pub user::User);
 
@@ -25,7 +25,6 @@ where
         let db = db.read().await;
         
         let api_key_header = HeaderName::from_static("x-api-key");
-
         let api_key = parts.headers.get(&api_key_header)
             .ok_or((StatusCode::BAD_REQUEST, "API key header is missing"))?
             .to_str()
@@ -35,7 +34,10 @@ where
             .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "An error occured while trying to fetch user"))?
             .ok_or((StatusCode::UNAUTHORIZED, "Invalid API key"))?;
 
-        user.last_access_stamp = timestamp_now_micro();
+        let route_path = parts.extensions.get::<RoutePath>()
+            .ok_or((StatusCode::INTERNAL_SERVER_ERROR, "Route path missing"))?;
+
+        user.use_endpoint(&route_path.as_str());
         user.save(&db.user_collection)
             .await
             .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "An error occured while trying to save user"))?;
