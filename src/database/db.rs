@@ -17,6 +17,6 @@ pub async fn setup() -> Result<DB> {
 
     Ok(DB {
         client,
-        user_collection: db.collection::<User>("users"),
+        user_collection: db.collection("users"),
     })
 }
