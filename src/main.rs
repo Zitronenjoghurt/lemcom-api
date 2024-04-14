@@ -1,9 +1,9 @@
-use std::sync::Arc;
 use axum::{middleware, Extension, Router};
+use std::sync::Arc;
 use tokio::sync::RwLock;
 mod api;
-use crate::api::resources;
 use crate::api::database::db;
+use crate::api::resources;
 use crate::api::utils::route_capture::capture_route;
 
 #[tokio::main]

@@ -1,18 +1,14 @@
 use axum::{
     http::{Method, Request},
     middleware::Next,
-    response::Response
+    response::Response,
 };
 
-pub async fn capture_route(
-    req: Request<axum::body::Body>,
-    next: Next
-) -> Response
-{
+pub async fn capture_route(req: Request<axum::body::Body>, next: Next) -> Response {
     let path = req.uri().path().to_owned();
     let method = req.method().clone();
     let mut req = req;
-    req.extensions_mut().insert(RoutePath{method, path});
+    req.extensions_mut().insert(RoutePath { method, path });
     next.run(req).await
 }
 
