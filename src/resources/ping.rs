@@ -3,7 +3,7 @@ use axum::{
     routing::get, 
     Router
 };
-use crate::api::models::base_models::MessageResponse;
+use crate::api::models::response_models::MessageResponse;
 use crate::api::security::authentication::ExtractUser;
 
 async fn get_ping(ExtractUser(_): ExtractUser) -> Json<MessageResponse> {

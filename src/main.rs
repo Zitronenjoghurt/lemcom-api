@@ -13,6 +13,7 @@ async fn main() {
 
     let app = Router::new()
         .nest("/", resources::ping::router())
+        .nest("/user", resources::user::router())
         .route_layer(middleware::from_fn(capture_route))
         .layer(Extension(shared_db));
 
