@@ -5,10 +5,15 @@ pub fn alphanumeric(input: &str) -> String {
         .collect()
 }
 
-#[test]
-fn a() {
-    assert_eq!(
-        "abcdefghigklmnopqrstuvwxyzABCDEFGHIGKLMNOPQRSTUVWXYZ0123456789",
-        alphanumeric("abcdefghigklmnopqrstuvwxyz 😃 ABCDEFGHIGKLMNOPQRSTUVWXYZ >-< 0123456789")
-    );
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a() {
+        assert_eq!(
+            "abcdefghigklmnopqrstuvwxyzABCDEFGHIGKLMNOPQRSTUVWXYZ0123456789",
+            alphanumeric("abcdefghigklmnopqrstuvwxyz 😃 ABCDEFGHIGKLMNOPQRSTUVWXYZ >-< 0123456789")
+        );
+    }
 }
