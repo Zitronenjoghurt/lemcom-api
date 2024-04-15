@@ -10,8 +10,8 @@ pub struct UserSettings {
 
 impl UserSettings {
     pub fn update(&mut self, data: Query<UserSettingsEdit>) {
-        self.join_date_public = data.join_date_public.unwrap_or(self.join_date_public);
-        self.online_date_public = data.online_date_public.unwrap_or(self.online_date_public);
+        self.join_date_public = data.show_join_date.unwrap_or(self.join_date_public);
+        self.online_date_public = data.show_online.unwrap_or(self.online_date_public);
     }
 }
 

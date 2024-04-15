@@ -1,0 +1,43 @@
+openapi: "3.0.2"
+info:
+  title: LemCom Messenger API
+  version: "0.1.0"
+servers:
+  - url: https://message.lemon.industries/
+
+components:
+  schemas:
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+  securitySchemes:
+    name:
+      type: apiKey
+      name: x-api-key
+      in: header
+paths:
+  /:
+    get:
+      description: "Ping the web service"
+      parameters: []
+      responses:
+        "200":
+          description: "Pong"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: "Missing API Key or Invalid API Key header format"
+        "401":
+          description: "Invalid API Key"
+  /user:
+    get:
+      description: ""
+      tags: ["User"]
+      parameters: []
+      responses:
+        "200":
+          description: OK
