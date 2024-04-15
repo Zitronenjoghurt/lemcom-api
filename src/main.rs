@@ -17,7 +17,7 @@ async fn main() -> io::Result<()> {
 
     let app = Router::<AppState>::new()
         .nest("/", resources::ping::router())
-        .nest("/user", resources::user::router())
+        .nest("/", resources::user::router())
         .with_state(app_state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;

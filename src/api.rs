@@ -8,6 +8,7 @@ pub mod models {
     pub mod query_models;
     pub mod response_models;
     pub mod user;
+    pub mod user_settings;
 }
 
 #[path = "./resources"]

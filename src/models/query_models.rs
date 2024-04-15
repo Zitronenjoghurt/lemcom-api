@@ -13,3 +13,9 @@ impl UserName {
         }
     }
 }
+
+#[derive(Deserialize)]
+pub struct UserSettingsEdit {
+    pub join_date_public: Option<bool>,
+    pub online_date_public: Option<bool>,
+}
