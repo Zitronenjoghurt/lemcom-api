@@ -1,14 +1,12 @@
 use dotenv::dotenv;
-use mongodb::{
-    error::Result, options::ClientOptions, Client, Collection
-};
+use mongodb::{error::Result, options::ClientOptions, Client, Collection};
 use std::env;
 
 use crate::api::models::user::User;
 
 pub struct DB {
     pub client: Client,
-    pub user_collection: Collection<User>
+    pub user_collection: Collection<User>,
 }
 
 pub async fn setup() -> Result<DB> {

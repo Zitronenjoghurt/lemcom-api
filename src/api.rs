@@ -1,27 +1,27 @@
-#[path ="./database"]
+#[path = "./database"]
 pub mod database {
     pub mod db;
 }
 
-#[path ="./models"]
+#[path = "./models"]
 pub mod models {
     pub mod query_models;
     pub mod response_models;
     pub mod user;
 }
 
-#[path ="./resources"]
+#[path = "./resources"]
 pub mod resources {
     pub mod ping;
     pub mod user;
 }
 
-#[path ="./security"]
+#[path = "./security"]
 pub mod security {
     pub mod authentication;
 }
 
-#[path ="./utils"]
+#[path = "./utils"]
 pub mod utils {
     pub mod route_capture;
     pub mod sanitize;
