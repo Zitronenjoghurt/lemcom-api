@@ -1,22 +1,22 @@
-use axum::{middleware, Extension, Router};
-use std::sync::Arc;
-use tokio::sync::RwLock;
+use axum::Router;
+use std::io;
 mod api;
 use crate::api::database::db;
 use crate::api::resources;
-use crate::api::utils::route_capture::capture_route;
+
+struct AppState {}
 
 #[tokio::main]
-async fn main() {
+async fn main() -> io::Result<()> {
     let db = db::setup().await.expect("Failed to set up MongoDB.");
-    let shared_db = Arc::new(RwLock::new(db));
+
+    let app_state = AppState {};
 
     let app = Router::new()
         .nest("/", resources::ping::router())
         .nest("/user", resources::user::router())
-        .route_layer(middleware::from_fn(capture_route))
-        .layer(Extension(shared_db));
+        .with_state(app_state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
+    axum::serve(listener, app).await
 }
