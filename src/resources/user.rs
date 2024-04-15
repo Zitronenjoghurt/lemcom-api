@@ -1,6 +1,7 @@
 use crate::api::database::db::DB;
 use crate::api::models::{query_models::UserName, response_models::UserPrivateInformation, user};
 use crate::api::security::authentication::ExtractUser;
+use crate::AppState;
 use axum::{
     extract::Query, http::StatusCode, response::IntoResponse, routing::get, Extension, Json, Router,
 };
@@ -25,8 +26,8 @@ async fn get_user_search(
     }
 }
 
-pub fn router() -> Router {
-    Router::new()
+pub fn router() -> Router<AppState> {
+    Router::<AppState>::new()
         .route("/", get(get_user))
         .route("/search", get(get_user_search))
 }

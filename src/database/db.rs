@@ -4,6 +4,7 @@ use std::env;
 
 use crate::api::models::user::User;
 
+#[derive(Clone)]
 pub struct DB {
     pub client: Client,
     pub user_collection: Collection<User>,

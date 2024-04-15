@@ -23,7 +23,6 @@ pub mod security {
 
 #[path = "./utils"]
 pub mod utils {
-    pub mod route_capture;
     pub mod sanitize;
     pub mod time_operations;
 }

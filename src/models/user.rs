@@ -38,11 +38,11 @@ impl User {
         Ok(())
     }
 
-    pub fn use_endpoint(&mut self, endpoint_name: &str) {
+    pub fn use_endpoint(&mut self, method: &str, path: &str) {
         self.last_access_stamp = timestamp_now_nanos();
         *self
             .endpoint_usage
-            .entry(endpoint_name.to_string())
+            .entry(format!("{method} {path}"))
             .or_insert(0) += 1;
     }
 
