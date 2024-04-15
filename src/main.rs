@@ -4,6 +4,7 @@ mod api;
 use crate::api::database::db;
 use crate::api::resources;
 
+#[derive(Clone)]
 struct AppState {}
 
 #[tokio::main]
@@ -12,7 +13,7 @@ async fn main() -> io::Result<()> {
 
     let app_state = AppState {};
 
-    let app = Router::new()
+    let app = Router::<AppState>::new()
         .nest("/", resources::ping::router())
         .nest("/user", resources::user::router())
         .with_state(app_state);
