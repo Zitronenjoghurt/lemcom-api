@@ -2,6 +2,7 @@ use crate::api::database::db::DB;
 use crate::api::models::{query_models::UserName, response_models::UserPrivateInformation, user};
 use crate::api::security::authentication::ExtractUser;
 use crate::AppState;
+use axum::response::Response;
 use axum::{
     extract::Query, http::StatusCode, response::IntoResponse, routing::get, Extension, Json, Router,
 };
@@ -16,7 +17,7 @@ async fn get_user_search(
     ExtractUser(_): ExtractUser,
     Extension(db): Extension<Arc<RwLock<DB>>>,
     query: Query<UserName>,
-) -> impl IntoResponse {
+) -> Response {
     let query = query.sanitize();
     let db = db.read().await;
     match user::find_user_by_name(&db.user_collection, &query.name).await {

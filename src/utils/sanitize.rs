@@ -1,6 +1,12 @@
-use regex::Regex;
+use rustrict::CensorStr;
 
-pub fn alphanumeric(input: String) -> String {
-    let re = Regex::new(r"[^a-zA-Z0-9]").unwrap();
-    re.replace_all(&input, "").to_string()
+pub fn alphanumeric(input: &str) -> String {
+    input
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric())
+        .collect()
+}
+
+pub fn profanity(input: &str) -> String {
+    input.censor()
 }

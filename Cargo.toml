@@ -4,10 +4,10 @@ version = "0.1.2"
 edition = "2021"
 
 [dependencies]
-axum = "0.7.5"
+axum = { version = "0.7.5", features = ["original-uri"] }
 chrono = "0.4.37"
-dotenv = "0.15.0"
+dotenvy = "0.15.7"
 mongodb = "2.8.2"
-regex = "1.10.4"
+rustrict = "0.7.24"
 serde = { version = "1.0.197", features = ["derive"] }
 tokio = { version = "1.37.0", features = ["macros", "rt-multi-thread"] }

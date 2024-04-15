@@ -1,4 +1,4 @@
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use mongodb::{error::Result, options::ClientOptions, Client, Collection};
 use std::env;
 
@@ -11,7 +11,7 @@ pub struct DB {
 }
 
 pub async fn setup() -> Result<DB> {
-    dotenv().ok();
+    dotenv().expect("Failed to load .env");
     let mongo_url = env::var("DB_URL").expect("DB URL not set.");
     let client_options = ClientOptions::parse(mongo_url).await?;
     let client = Client::with_options(client_options)?;
@@ -19,6 +19,6 @@ pub async fn setup() -> Result<DB> {
 
     Ok(DB {
         client,
-        user_collection: db.collection::<User>("users"),
+        user_collection: db.collection("users"),
     })
 }
