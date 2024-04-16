@@ -17,7 +17,9 @@ pub struct User {
     pub name: String,
     pub display_name: String,
     pub created_stamp: u64,
+    #[serde(default)]
     pub last_access_stamp: u64,
+    #[serde(default)]
     pub endpoint_usage: HashMap<String, u64>,
     #[serde(default)]
     pub settings: UserSettings,
