@@ -3,6 +3,7 @@ use serde::Deserialize;
 use utoipa::IntoParams;
 
 #[derive(Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
 pub struct UserName {
     pub name: String,
 }
