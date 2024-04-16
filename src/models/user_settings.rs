@@ -3,42 +3,50 @@ use axum::extract::Query;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
+use super::enums::PrivacyLevel;
+
 /// User configuration
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct UserSettings {
-    /// If other people are able to find you without knowing your name, for example on a public user list
-    #[serde(default = "default_false")]
-    pub profile_public: bool,
-    /// If other people are able to see when you joined the network
-    #[serde(default = "default_true")]
-    pub join_date_public: bool,
-    /// If other people are able to see when you were last online
-    #[serde(default = "default_true")]
-    pub online_date_public: bool,
+    /// Who is able to see you, public means you may appear on public user lists
+    #[serde(default = "default_friends")]
+    pub show_profile: PrivacyLevel,
+    /// Who is able to see when you joined the network
+    #[serde(default = "default_public")]
+    pub show_join_date: PrivacyLevel,
+    /// Who is able to see when you were last online
+    #[serde(default = "default_public")]
+    pub show_online_date: PrivacyLevel,
 }
 
-fn default_false() -> bool {
-    false
+fn default_friends() -> PrivacyLevel {
+    PrivacyLevel::Friends
 }
 
-fn default_true() -> bool {
-    true
+fn default_public() -> PrivacyLevel {
+    PrivacyLevel::Public
 }
 
 impl UserSettings {
     pub fn update(&mut self, data: Query<UserSettingsEdit>) {
-        self.profile_public = data.profile_public.unwrap_or(self.profile_public);
-        self.join_date_public = data.show_join_date.unwrap_or(self.join_date_public);
-        self.online_date_public = data.show_online.unwrap_or(self.online_date_public);
+        if let Some(new_value) = &data.show_public {
+            self.show_profile = new_value.clone();
+        }
+        if let Some(new_value) = &data.show_join_date {
+            self.show_join_date = new_value.clone();
+        }
+        if let Some(new_value) = &data.show_online {
+            self.show_online_date = new_value.clone();
+        }
     }
 }
 
 impl Default for UserSettings {
     fn default() -> Self {
         UserSettings {
-            profile_public: false,
-            join_date_public: true,
-            online_date_public: true,
+            show_profile: PrivacyLevel::Friends,
+            show_join_date: PrivacyLevel::Public,
+            show_online_date: PrivacyLevel::Public,
         }
     }
 }

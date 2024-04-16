@@ -5,6 +5,7 @@ pub mod database {
 
 #[path = "./models"]
 pub mod models {
+    pub mod enums;
     pub mod query_models;
     pub mod response_models;
     pub mod user;

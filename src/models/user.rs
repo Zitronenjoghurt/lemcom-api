@@ -58,13 +58,13 @@ impl User {
         }
     }
 
-    pub fn public_information(&self) -> UserPublicInformation {
-        let joined_date = if self.settings.join_date_public {
+    pub fn public_information(&self, is_friend: bool) -> UserPublicInformation {
+        let joined_date = if self.settings.show_join_date.is_visible(is_friend) {
             Some(nanos_to_date(self.created_stamp))
         } else {
             None
         };
-        let last_online_date = if self.settings.online_date_public {
+        let last_online_date = if self.settings.show_online_date.is_visible(is_friend) {
             Some(nanos_to_date(self.last_access_stamp))
         } else {
             None
@@ -107,7 +107,7 @@ pub async fn get_public_users(
         .limit(page_size as i64)
         .build();
 
-    let filter = doc! { "settings.profile_public": true };
+    let filter = doc! { "settings.show_profile": "Public" };
     let mut cursor = collection.find(filter.clone(), find_options).await?;
 
     let mut users = Vec::new();

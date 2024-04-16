@@ -38,8 +38,10 @@ async fn get_users(
 
     match get_public_users(&state.database.user_collection, page, page_size).await {
         Ok((users, pagination)) => {
-            let public_information: Vec<UserPublicInformation> =
-                users.iter().map(|user| user.public_information()).collect();
+            let public_information: Vec<UserPublicInformation> = users
+                .iter()
+                .map(|user| user.public_information(false)) // ToDo: is_friend set to false, implement when friend feature is added
+                .collect();
             let user_list = UserList {
                 users: public_information,
                 pagination,

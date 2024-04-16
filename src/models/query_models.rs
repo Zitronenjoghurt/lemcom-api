@@ -1,3 +1,4 @@
+use crate::api::models::enums::PrivacyLevel;
 use crate::api::utils::sanitize;
 use serde::Deserialize;
 use utoipa::IntoParams;
@@ -21,11 +22,11 @@ impl UserName {
 #[into_params(parameter_in = Query)]
 pub struct UserSettingsEdit {
     /// If other people should be able to find you without knowing your name, for example through a public user list
-    pub profile_public: Option<bool>,
+    pub show_public: Option<PrivacyLevel>,
     /// If other people should be able to see when you joined the network
-    pub show_join_date: Option<bool>,
+    pub show_join_date: Option<PrivacyLevel>,
     /// If other people should be able to see when you were last online
-    pub show_online: Option<bool>,
+    pub show_online: Option<PrivacyLevel>,
 }
 
 #[derive(Deserialize, IntoParams)]
