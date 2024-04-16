@@ -87,7 +87,7 @@ async fn get_user_settings(ExtractUser(user): ExtractUser) -> Json<UserSettings>
     path = "/user/settings",
     params(UserSettingsEdit),
     responses(
-        (status = 204, description = "Successfully changed"),
+        (status = 200, description = "Your updated user settings", body = UserSettings),
         (status = 400, description = "Missing API Key or Invalid header/query"),
         (status = 401, description = "Invalid API Key"),
     ),
@@ -103,7 +103,7 @@ async fn patch_user_settings(
 ) -> Response {
     user.settings.update(query);
     match user.save(&state.database.user_collection).await {
-        Ok(_) => (StatusCode::NO_CONTENT, "").into_response(),
+        Ok(_) => Json(user.settings).into_response(),
         Err(_) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             "Failed to save user settings",
