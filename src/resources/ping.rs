@@ -10,7 +10,7 @@ use axum::{routing::get, Json, Router};
     path = "/",
     responses(
         (status = 200, description = "Pong", body = MessageResponse),
-        (status = 400, description = "Missing API Key or Invalid API Key header format"),
+        (status = 400, description = "Missing API Key or Invalid header/query"),
         (status = 401, description = "Invalid API Key"),
     ),
     security(

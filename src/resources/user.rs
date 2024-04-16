@@ -16,7 +16,7 @@ use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::ge
     path = "/user",
     responses(
         (status = 200, description = "Personal private user information", body = UserPrivateInformation),
-        (status = 400, description = "Missing API Key or Invalid API Key header format"),
+        (status = 400, description = "Missing API Key or Invalid header/query"),
         (status = 401, description = "Invalid API Key"),
     ),
     security(
@@ -37,7 +37,7 @@ async fn get_user(ExtractUser(user): ExtractUser) -> Json<UserPrivateInformation
     params(UserName),
     responses(
         (status = 200, description = "Personal private user information", body = UserPrivateInformation),
-        (status = 400, description = "Missing API Key or Invalid API Key header format"),
+        (status = 400, description = "Missing API Key or Invalid header/query"),
         (status = 401, description = "Invalid API Key"),
         (status = 404, description = "User does not exist"),
     ),
@@ -67,7 +67,7 @@ async fn get_user_search(
     path = "/user/settings",
     responses(
         (status = 200, description = "Your user settings", body = UserSettings),
-        (status = 400, description = "Missing API Key or Invalid API Key header format"),
+        (status = 400, description = "Missing API Key or Invalid header/query"),
         (status = 401, description = "Invalid API Key"),
     ),
     security(
@@ -88,7 +88,7 @@ async fn get_user_settings(ExtractUser(user): ExtractUser) -> Json<UserSettings>
     params(UserSettingsEdit),
     responses(
         (status = 204, description = "Successfully changed"),
-        (status = 400, description = "Missing API Key or Invalid API Key header format"),
+        (status = 400, description = "Missing API Key or Invalid header/query"),
         (status = 401, description = "Invalid API Key"),
     ),
     security(
