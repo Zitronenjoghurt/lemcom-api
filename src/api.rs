@@ -15,6 +15,7 @@ pub mod models {
 pub mod resources {
     pub mod ping;
     pub mod user;
+    pub mod users;
 }
 
 #[path = "./security"]

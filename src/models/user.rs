@@ -1,6 +1,7 @@
+use futures::TryStreamExt;
 use mongodb::{
     bson::{self, doc},
-    options::UpdateOptions,
+    options::{FindOptions, UpdateOptions},
     Collection,
 };
 use serde::{Deserialize, Serialize};
@@ -9,7 +10,7 @@ use std::collections::HashMap;
 use crate::api::models::response_models::{UserPrivateInformation, UserPublicInformation};
 use crate::api::utils::time_operations::{nanos_to_date, timestamp_now_nanos};
 
-use super::user_settings::UserSettings;
+use super::{response_models::Pagination, user_settings::UserSettings};
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
@@ -59,14 +60,14 @@ impl User {
 
     pub fn public_information(&self) -> UserPublicInformation {
         let joined_date = if self.settings.join_date_public {
-            nanos_to_date(self.created_stamp)
+            Some(nanos_to_date(self.created_stamp))
         } else {
-            String::new()
+            None
         };
         let last_online_date = if self.settings.online_date_public {
-            nanos_to_date(self.last_access_stamp)
+            Some(nanos_to_date(self.last_access_stamp))
         } else {
-            String::new()
+            None
         };
         UserPublicInformation {
             name: self.name.clone(),
@@ -93,4 +94,29 @@ pub async fn find_user_by_name(
     let filter = doc! { "name": name.to_lowercase() };
     let user = collection.find_one(Some(filter), None).await?;
     Ok(user)
+}
+
+pub async fn get_public_users(
+    collection: &Collection<User>,
+    page: u32,
+    page_size: u32,
+) -> mongodb::error::Result<(Vec<User>, Pagination)> {
+    let skip = (page - 1) * page_size;
+    let find_options = FindOptions::builder()
+        .skip(skip as u64)
+        .limit(page_size as i64)
+        .build();
+
+    let filter = doc! { "settings.profile_public": true };
+    let mut cursor = collection.find(filter.clone(), find_options).await?;
+
+    let mut users = Vec::new();
+    while let Some(user) = cursor.try_next().await? {
+        users.push(user);
+    }
+
+    let total: u32 = collection.count_documents(filter, None).await? as u32;
+    let pagination = Pagination::new(total, page, page_size, users.len() as u32);
+
+    Ok((users, pagination))
 }

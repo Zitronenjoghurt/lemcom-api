@@ -1,5 +1,5 @@
 use utoipa::{openapi::security::{ApiKey, ApiKeyValue, SecurityScheme}, Modify, OpenApi};
-use crate::api::{self, models::{response_models::{MessageResponse, UserPrivateInformation, UserPublicInformation}, user_settings::UserSettings}};
+use crate::api::{self, models::{response_models::{MessageResponse, Pagination, UserList, UserPrivateInformation, UserPublicInformation}, user_settings::UserSettings}};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -8,15 +8,17 @@ use crate::api::{self, models::{response_models::{MessageResponse, UserPrivateIn
         api::resources::user::get_user,
         api::resources::user::get_user_search,
         api::resources::user::get_user_settings,
-        api::resources::user::patch_user_settings
+        api::resources::user::patch_user_settings,
+        api::resources::users::get_users
     ),
     tags(
         (name = "Misc", description = "Miscellaneous endppoints"),
         (name = "User", description = "User management endpoints"),
+        (name = "Users", description = "Endpoint for handling multiple users"),
     ),
     modifiers(&SecurityAddon),
     components(
-        schemas(MessageResponse, UserPublicInformation, UserPrivateInformation, UserSettings),
+        schemas(MessageResponse, UserPublicInformation, UserPrivateInformation, UserSettings, UserList, Pagination),
     )
 )]
 pub struct ApiDoc;

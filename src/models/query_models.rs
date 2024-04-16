@@ -20,8 +20,30 @@ impl UserName {
 #[derive(Deserialize, IntoParams)]
 #[into_params(parameter_in = Query)]
 pub struct UserSettingsEdit {
+    /// If other people should be able to find you without knowing your name, for example through a public user list
+    pub profile_public: Option<bool>,
     /// If other people should be able to see when you joined the network
     pub show_join_date: Option<bool>,
     /// If other people should be able to see when you were last online
     pub show_online: Option<bool>,
+}
+
+#[derive(Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
+pub struct PaginationQuery {
+    /// The results page number
+    pub page: Option<u32>,
+    /// The maximum amount of results per page, has to be between 1 and 100
+    pub page_size: Option<u32>,
+}
+
+impl PaginationQuery {
+    pub fn sanitize(&self) -> PaginationQuery {
+        let clamped_page_size = self.page_size.map(|size| size.clamp(1, 100));
+
+        PaginationQuery {
+            page: self.page,
+            page_size: clamped_page_size,
+        }
+    }
 }
