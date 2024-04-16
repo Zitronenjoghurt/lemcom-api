@@ -3,9 +3,12 @@ use axum::extract::Query;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
+/// User configuration
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct UserSettings {
+    /// If other people are able to see when you joined the network
     pub join_date_public: bool,
+    /// If other people are able to see when you were last online
     pub online_date_public: bool,
 }
 
