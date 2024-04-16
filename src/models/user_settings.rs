@@ -1,8 +1,9 @@
 use crate::api::models::query_models::UserSettingsEdit;
 use axum::extract::Query;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct UserSettings {
     pub join_date_public: bool,
     pub online_date_public: bool,

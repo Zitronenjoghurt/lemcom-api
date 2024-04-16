@@ -1,7 +1,8 @@
 use crate::api::utils::sanitize;
 use serde::Deserialize;
+use utoipa::IntoParams;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, IntoParams)]
 pub struct UserName {
     pub name: String,
 }
@@ -14,7 +15,8 @@ impl UserName {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
 pub struct UserSettingsEdit {
     pub show_join_date: Option<bool>,
     pub show_online: Option<bool>,

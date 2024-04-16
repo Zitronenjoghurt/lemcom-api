@@ -88,7 +88,7 @@ pub async fn find_user_by_name(
     collection: &Collection<User>,
     name: &str,
 ) -> mongodb::error::Result<Option<User>> {
-    let filter = doc! { "name": name };
+    let filter = doc! { "name": name.to_lowercase() };
     let user = collection.find_one(Some(filter), None).await?;
     Ok(user)
 }

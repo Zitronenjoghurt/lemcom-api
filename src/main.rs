@@ -1,6 +1,11 @@
 use axum::Router;
 use std::io;
+use utoipa::OpenApi;
+use utoipa_rapidoc::RapiDoc;
+use utoipa_redoc::{Redoc, Servable};
+use utoipa_swagger_ui::SwaggerUi;
 mod api;
+mod docs;
 use crate::api::database::db;
 use crate::api::resources;
 
@@ -18,6 +23,9 @@ async fn main() -> io::Result<()> {
     let app = Router::<AppState>::new()
         .nest("/", resources::ping::router())
         .nest("/", resources::user::router())
+        .merge(SwaggerUi::new("/docs").url("/api-docs/openapi.json", docs::ApiDoc::openapi()))
+        .merge(Redoc::with_url("/redoc", docs::ApiDoc::openapi()))
+        .merge(RapiDoc::new("/api-docs/openapi.json").path("/rapidoc"))
         .with_state(app_state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;

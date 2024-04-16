@@ -8,10 +8,44 @@ use axum::response::Response;
 use axum::routing::patch;
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 
+/// Retrieve own user information.
+///
+/// This endpoint returns your private user information.
+#[utoipa::path(
+    get,
+    path = "/user",
+    responses(
+        (status = 200, description = "Personal private user information", body = UserPrivateInformation),
+        (status = 400, description = "Missing API Key or Invalid API Key header format"),
+        (status = 401, description = "Invalid API Key"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    tag = "User"
+)]
 async fn get_user(ExtractUser(user): ExtractUser) -> Json<UserPrivateInformation> {
     Json(user.private_information())
 }
 
+/// Retrieve public user information.
+///
+/// This endpoint returns the user information of the specified username, should they exist.
+#[utoipa::path(
+    get,
+    path = "/user/search",
+    params(UserName),
+    responses(
+        (status = 200, description = "Personal private user information", body = UserPrivateInformation),
+        (status = 400, description = "Missing API Key or Invalid API Key header format"),
+        (status = 401, description = "Invalid API Key"),
+        (status = 404, description = "User does not exist"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    tag = "User"
+)]
 async fn get_user_search(
     ExtractUser(_): ExtractUser,
     State(state): State<AppState>,
@@ -25,10 +59,43 @@ async fn get_user_search(
     }
 }
 
+/// Retrieve own user settings.
+///
+/// This endpoint returns your user settings.
+#[utoipa::path(
+    get,
+    path = "/user/settings",
+    responses(
+        (status = 200, description = "Your user settings", body = UserSettings),
+        (status = 400, description = "Missing API Key or Invalid API Key header format"),
+        (status = 401, description = "Invalid API Key"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    tag = "User"
+)]
 async fn get_user_settings(ExtractUser(user): ExtractUser) -> Json<UserSettings> {
     Json(user.settings)
 }
 
+/// Edit own user settings.
+///
+/// This endpoint allows you to edit your own user settings.
+#[utoipa::path(
+    patch,
+    path = "/user/settings",
+    params(UserSettingsEdit),
+    responses(
+        (status = 204, description = "Successfully changed"),
+        (status = 400, description = "Missing API Key or Invalid API Key header format"),
+        (status = 401, description = "Invalid API Key"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    tag = "User"
+)]
 async fn patch_user_settings(
     ExtractUser(mut user): ExtractUser,
     State(state): State<AppState>,
