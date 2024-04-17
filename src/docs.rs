@@ -3,6 +3,10 @@ use crate::api::{self, models::{enums::PrivacyLevel, response_models::{MessageRe
 
 #[derive(OpenApi)]
 #[openapi(
+    info(
+        title="LemCom API",
+        description="A webservice for handling LemCom online services. LemCom will be a messaging application for desktop written in Rust.\n\nAll available docs: Rapidoc (/docs), Swagger (/swagger) and Redoc (/redoc)."
+    ),
     paths(
         api::resources::ping::get_ping,  
         api::resources::user::get_user,

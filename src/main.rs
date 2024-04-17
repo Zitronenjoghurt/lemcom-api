@@ -24,9 +24,9 @@ async fn main() -> io::Result<()> {
         .nest("/", resources::ping::router())
         .nest("/", resources::user::router())
         .nest("/", resources::users::router())
-        .merge(SwaggerUi::new("/docs").url("/api-docs/openapi.json", docs::ApiDoc::openapi()))
+        .merge(SwaggerUi::new("/swagger").url("/api-docs/openapi.json", docs::ApiDoc::openapi()))
         .merge(Redoc::with_url("/redoc", docs::ApiDoc::openapi()))
-        .merge(RapiDoc::new("/api-docs/openapi.json").path("/rapidoc"))
+        .merge(RapiDoc::new("/api-docs/openapi.json").path("/docs"))
         .with_state(app_state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;

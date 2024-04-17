@@ -19,9 +19,17 @@ impl FromRequestParts<AppState> for ExtractUser {
         let api_key = parts
             .headers
             .get(&api_key_header)
-            .ok_or((StatusCode::BAD_REQUEST, "API key header is missing"))?
+            .ok_or((
+                StatusCode::BAD_REQUEST,
+                "API key header is missing, check /docs for more information",
+            ))?
             .to_str()
-            .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid API key format"))?;
+            .map_err(|_| {
+                (
+                    StatusCode::BAD_REQUEST,
+                    "Invalid API key format, check /docs for more information",
+                )
+            })?;
 
         let mut user = user::find_user_by_key(&state.database.user_collection, api_key)
             .await
@@ -31,7 +39,10 @@ impl FromRequestParts<AppState> for ExtractUser {
                     "An error occured while trying to fetch user",
                 )
             })?
-            .ok_or((StatusCode::UNAUTHORIZED, "Invalid API key"))?;
+            .ok_or((
+                StatusCode::UNAUTHORIZED,
+                "Invalid API key, check /docs for more information",
+            ))?;
 
         let method = parts.method.as_str();
         let path = parts.uri.path();
