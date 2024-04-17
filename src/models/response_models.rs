@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
+use super::enums::PermissionLevel;
+
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct MessageResponse {
     pub message: String,
@@ -19,6 +21,8 @@ pub struct UserPrivateInformation {
     pub last_online_date: String,
     /// The total amount of API request that were processed for your account
     pub total_request_count: u64,
+    // The global permission level
+    pub permission_level: PermissionLevel,
 }
 
 /// Public user information accessible by everyone
@@ -32,6 +36,8 @@ pub struct UserPublicInformation {
     pub joined_date: Option<String>,
     /// The date and time this account last sent an API request, null if the user set it to private
     pub last_online_date: Option<String>,
+    /// The global permission level of the user
+    pub permission_level: PermissionLevel,
 }
 
 /// Pagination information for the request results

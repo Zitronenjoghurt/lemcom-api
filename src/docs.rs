@@ -1,5 +1,5 @@
 use utoipa::{openapi::security::{ApiKey, ApiKeyValue, SecurityScheme}, Modify, OpenApi};
-use crate::api::{self, models::{enums::PrivacyLevel, response_models::{MessageResponse, Pagination, UserList, UserPrivateInformation, UserPublicInformation}, user_settings::UserSettings}};
+use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response_models::{MessageResponse, Pagination, UserList, UserPrivateInformation, UserPublicInformation}, user_settings::UserSettings}};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -23,7 +23,7 @@ use crate::api::{self, models::{enums::PrivacyLevel, response_models::{MessageRe
     ),
     modifiers(&SecurityAddon),
     components(
-        schemas(MessageResponse, UserPublicInformation, UserPrivateInformation, UserSettings, UserList, Pagination, PrivacyLevel),
+        schemas(MessageResponse, UserPublicInformation, UserPrivateInformation, UserSettings, UserList, Pagination, PrivacyLevel, PermissionLevel),
     )
 )]
 pub struct ApiDoc;

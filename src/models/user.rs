@@ -57,6 +57,7 @@ impl User {
             joined_date: nanos_to_date(self.created_stamp),
             last_online_date: nanos_to_date(self.last_access_stamp),
             total_request_count: self.request_count(),
+            permission_level: self.permission_level.clone(),
         }
     }
 
@@ -76,6 +77,7 @@ impl User {
             display_name: self.display_name.clone(),
             joined_date,
             last_online_date,
+            permission_level: self.permission_level.clone(),
         }
     }
 }
