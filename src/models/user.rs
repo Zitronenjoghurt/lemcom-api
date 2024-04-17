@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use crate::api::models::response_models::{UserPrivateInformation, UserPublicInformation};
 use crate::api::utils::time_operations::{nanos_to_date, timestamp_now_nanos};
 
-use super::{response_models::Pagination, user_settings::UserSettings};
+use super::{enums::PermissionLevel, response_models::Pagination, user_settings::UserSettings};
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
@@ -24,6 +24,8 @@ pub struct User {
     pub endpoint_usage: HashMap<String, u64>,
     #[serde(default)]
     pub settings: UserSettings,
+    #[serde(default)]
+    pub permission_level: PermissionLevel,
 }
 
 impl User {

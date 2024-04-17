@@ -17,3 +17,12 @@ impl PrivacyLevel {
         }
     }
 }
+
+#[derive(Serialize, Deserialize, Clone, ToSchema, Default)]
+pub enum PermissionLevel {
+    #[default]
+    User,
+    Moderator,
+    Administrator,
+    Owner,
+}
