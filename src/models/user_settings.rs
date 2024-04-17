@@ -39,7 +39,7 @@ fn default_true() -> bool {
 
 impl UserSettings {
     pub fn update(&mut self, data: Query<UserSettingsEdit>) {
-        if let Some(new_value) = &data.show_public {
+        if let Some(new_value) = &data.show_profile {
             self.show_profile = new_value.clone();
         }
         if let Some(new_value) = &data.show_join_date {

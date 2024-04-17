@@ -21,8 +21,8 @@ impl UserName {
 #[derive(Deserialize, IntoParams)]
 #[into_params(parameter_in = Query)]
 pub struct UserSettingsEdit {
-    /// If other people should be able to find you without knowing your name, for example through a public user list
-    pub show_public: Option<PrivacyLevel>,
+    /// If other people should be able to find you without knowing your name, public means you may appear on public user lists
+    pub show_profile: Option<PrivacyLevel>,
     /// If other people should be able to see when you joined the network
     pub show_join_date: Option<PrivacyLevel>,
     /// If other people should be able to see when you were last online
