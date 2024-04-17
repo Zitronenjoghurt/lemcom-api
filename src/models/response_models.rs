@@ -80,3 +80,20 @@ pub struct UserList {
     pub users: Vec<UserPublicInformation>,
     pub pagination: Pagination,
 }
+
+/// A received friend request
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct FriendRequestInformation {
+    /// Public user information
+    pub user: UserPublicInformation,
+    /// The time the request was sent
+    pub sent_date: String,
+}
+
+/// A list of received friend request
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct FriendRequests {
+    /// Received friend requests
+    pub requests: Vec<FriendRequestInformation>,
+    pub pagination: Pagination,
+}

@@ -48,9 +48,9 @@ async fn get_users(
             };
             Json(user_list).into_response()
         }
-        Err(e) => (
+        Err(_) => (
             StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Error fetching users: {}", e),
+            ("An error occured while fetching users"),
         )
             .into_response(),
     }

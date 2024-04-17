@@ -31,7 +31,7 @@ impl FromRequestParts<AppState> for ExtractUser {
                 )
             })?;
 
-        let mut user = user::find_user_by_key(&state.database.user_collection, api_key)
+        let mut user = user::find_user_by_key(&state.database.user_collection, api_key.to_string())
             .await
             .map_err(|_| {
                 (

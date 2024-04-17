@@ -1,4 +1,11 @@
-use futures::TryStreamExt;
+use crate::api::models::response_models::{UserPrivateInformation, UserPublicInformation};
+use crate::api::models::{
+    enums::PermissionLevel,
+    response_models::{FriendRequests, Pagination},
+    user_settings::UserSettings,
+};
+use crate::api::utils::time_operations::{nanos_to_date, timestamp_now_nanos};
+use futures::{future::try_join_all, TryStreamExt};
 use mongodb::{
     bson::{self, doc},
     options::{FindOptions, UpdateOptions},
@@ -7,10 +14,7 @@ use mongodb::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::api::models::response_models::{UserPrivateInformation, UserPublicInformation};
-use crate::api::utils::time_operations::{nanos_to_date, timestamp_now_nanos};
-
-use super::{enums::PermissionLevel, response_models::Pagination, user_settings::UserSettings};
+use super::response_models::FriendRequestInformation;
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
@@ -26,6 +30,8 @@ pub struct User {
     pub settings: UserSettings,
     #[serde(default)]
     pub permission_level: PermissionLevel,
+    #[serde(default)]
+    pub friend_requests: HashMap<String, u64>,
 }
 
 impl User {
@@ -80,15 +86,75 @@ impl User {
             permission_level: self.permission_level.clone(),
         }
     }
+
+    pub async fn friend_requests_with_pagination(
+        &self,
+        collection: &Collection<User>,
+        page: u32,
+        page_size: u32,
+    ) -> mongodb::error::Result<FriendRequests> {
+        let mut requests: Vec<(&String, &u64)> = self.friend_requests.iter().collect();
+        requests.sort_unstable_by(|a, b| b.1.cmp(a.1));
+
+        let start = ((page - 1) * page_size) as usize;
+        if start >= requests.len() {
+            return Ok(FriendRequests {
+                requests: vec![],
+                pagination: Pagination::new(requests.len() as u32, page, page_size, 0),
+            });
+        }
+        let end = std::cmp::min(start + page_size as usize, requests.len());
+
+        let page_keys: Vec<String> = requests[start..end]
+            .iter()
+            .map(|(k, _)| (*k).clone())
+            .collect();
+
+        let users = find_users_by_keys(collection, page_keys).await?;
+
+        let request_information = users
+            .into_iter()
+            .zip(requests[start..end].iter().map(|(_, &t)| t))
+            .filter_map(|(user_option, timestamp)| {
+                user_option.map(|user| FriendRequestInformation {
+                    user: user.public_information(false),
+                    sent_date: nanos_to_date(timestamp),
+                })
+            })
+            .collect::<Vec<_>>();
+
+        let pagination = Pagination::new(
+            requests.len() as u32,
+            page,
+            page_size,
+            request_information.len() as u32,
+        );
+
+        Ok(FriendRequests {
+            requests: request_information,
+            pagination,
+        })
+    }
 }
 
 pub async fn find_user_by_key(
     collection: &Collection<User>,
-    key: &str,
+    key: String,
 ) -> mongodb::error::Result<Option<User>> {
     let filter = doc! { "key": key };
     let user = collection.find_one(Some(filter), None).await?;
     Ok(user)
+}
+
+async fn find_users_by_keys(
+    collection: &Collection<User>,
+    keys: Vec<String>,
+) -> mongodb::error::Result<Vec<Option<User>>> {
+    let futures = keys
+        .into_iter()
+        .map(|key| find_user_by_key(collection, key))
+        .collect::<Vec<_>>();
+    try_join_all(futures).await
 }
 
 pub async fn find_user_by_name(

@@ -1,5 +1,5 @@
 use utoipa::{openapi::security::{ApiKey, ApiKeyValue, SecurityScheme}, Modify, OpenApi};
-use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response_models::{MessageResponse, Pagination, UserList, UserPrivateInformation, UserPublicInformation}, user_settings::UserSettings}};
+use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response_models::{FriendRequestInformation, FriendRequests, MessageResponse, Pagination, UserList, UserPrivateInformation, UserPublicInformation}, user_settings::UserSettings}};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -8,6 +8,7 @@ use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response
         description="A webservice for handling LemCom online services. LemCom will be a messaging application for desktop written in Rust.\n\nAll available docs: Rapidoc (/docs), Swagger (/swagger) and Redoc (/redoc)."
     ),
     paths(
+        api::resources::friend::get_friend_request,
         api::resources::metrics::get_metrics_usage,
         api::resources::ping::get_ping,  
         api::resources::user::get_user,
@@ -17,13 +18,14 @@ use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response
         api::resources::users::get_users
     ),
     tags(
-        (name = "Misc", description = "Miscellaneous endppoints"),
+        (name = "Misc", description = "Miscellaneous endpoints"),
         (name = "User", description = "User management endpoints"),
         (name = "Users", description = "Endpoint for handling multiple users"),
+        (name = "Friends", description = "Endpoints for handling friend requests and friendships"),
     ),
     modifiers(&SecurityAddon),
     components(
-        schemas(MessageResponse, UserPublicInformation, UserPrivateInformation, UserSettings, UserList, Pagination, PrivacyLevel, PermissionLevel),
+        schemas(MessageResponse, UserPublicInformation, UserPrivateInformation, UserSettings, UserList, Pagination, PrivacyLevel, PermissionLevel, FriendRequestInformation, FriendRequests),
     )
 )]
 pub struct ApiDoc;
