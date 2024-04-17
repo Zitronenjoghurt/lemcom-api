@@ -2,12 +2,13 @@ use dotenvy::dotenv;
 use mongodb::{error::Result, options::ClientOptions, Client, Collection};
 use std::env;
 
-use crate::api::models::user::User;
+use crate::api::models::{friendship::Friendship, user::User};
 
 #[derive(Clone)]
 pub struct DB {
     pub client: Client,
     pub user_collection: Collection<User>,
+    pub friendship_collection: Collection<Friendship>,
 }
 
 pub async fn setup() -> Result<DB> {
@@ -20,5 +21,6 @@ pub async fn setup() -> Result<DB> {
     Ok(DB {
         client,
         user_collection: db.collection("users"),
+        friendship_collection: db.collection("friendships"),
     })
 }
