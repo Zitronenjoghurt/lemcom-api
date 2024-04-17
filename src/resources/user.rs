@@ -53,7 +53,14 @@ async fn get_user_search(
 ) -> Response {
     let query = query.sanitize();
     match user::find_user_by_name(&state.database.user_collection, &query.name).await {
-        Ok(Some(user)) => Json(user.public_information(false)).into_response(), // ToDo: is_friend set to false, implement when friend feature is added
+        Ok(Some(user)) => {
+            // ToDo: is_friend set to false for both, implement when friend feature is added
+            if user.settings.show_in_search.is_visible(false) {
+                Json(user.public_information(false)).into_response()
+            } else {
+                (StatusCode::NOT_FOUND, "User not found").into_response()
+            }
+        }
         Ok(None) => (StatusCode::NOT_FOUND, "User not found").into_response(),
         Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Database error").into_response(),
     }

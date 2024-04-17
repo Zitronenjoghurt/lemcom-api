@@ -27,6 +27,8 @@ pub struct UserSettingsEdit {
     pub show_join_date: Option<PrivacyLevel>,
     /// If other people should be able to see when you were last online
     pub show_online: Option<PrivacyLevel>,
+    /// If other people should be able to find you in search using your username
+    pub show_in_search: Option<PrivacyLevel>,
 }
 
 #[derive(Deserialize, IntoParams)]

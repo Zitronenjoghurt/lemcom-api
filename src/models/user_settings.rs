@@ -17,6 +17,9 @@ pub struct UserSettings {
     /// Who is able to see when you were last online
     #[serde(default = "default_public")]
     pub show_online_date: PrivacyLevel,
+    /// Who is able to find you using the search functionality
+    #[serde(default = "default_public")]
+    pub show_in_search: PrivacyLevel,
 }
 
 fn default_friends() -> PrivacyLevel {
@@ -38,6 +41,9 @@ impl UserSettings {
         if let Some(new_value) = &data.show_online {
             self.show_online_date = new_value.clone();
         }
+        if let Some(new_value) = &data.show_in_search {
+            self.show_in_search = new_value.clone();
+        }
     }
 }
 
@@ -47,6 +53,7 @@ impl Default for UserSettings {
             show_profile: PrivacyLevel::Friends,
             show_join_date: PrivacyLevel::Public,
             show_online_date: PrivacyLevel::Public,
+            show_in_search: PrivacyLevel::Public,
         }
     }
 }
