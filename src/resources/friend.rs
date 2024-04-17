@@ -1,4 +1,4 @@
-use crate::api::models::friendship::are_friends;
+use crate::api::models::friendship::{are_friends, Friendship};
 use crate::api::models::query_models::{PaginationQuery, UserName};
 use crate::api::models::user::find_user_by_name;
 use crate::api::security::authentication::ExtractUser;
@@ -58,7 +58,7 @@ async fn get_friend_request(
     params(UserName),
     responses(
         (status = 200, description = "Friend request was sent"),
-        (status = 400, description = "Already friends with the user"),
+        (status = 400, description = "Unable to send request"),
         (status = 401, description = "Invalid API Key"),
         (status = 404, description = "User not found or user does not allow friend requests"),
     ),
@@ -127,6 +127,13 @@ async fn post_friend_request(
             .unwrap();
     }
 
+    if target.friend_requests.contains_key(&user.key) {
+        return Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body("Already sent a request to the user".into())
+            .unwrap();
+    }
+
     target
         .friend_requests
         .insert(user.key, timestamp_now_nanos());
@@ -140,8 +147,107 @@ async fn post_friend_request(
     }
 }
 
+/// Accept a pending friend requests.
+///
+/// This endpoint allows you to accept friend requests.
+#[utoipa::path(
+    post,
+    path = "/friend/request/accept",
+    params(UserName),
+    responses(
+        (status = 200, description = "Friend request accepted"),
+        (status = 401, description = "Unable to accept request"),
+        (status = 401, description = "Invalid API Key"),
+        (status = 404, description = "User not found or no pending request from user"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    tag = "Friends"
+)]
+async fn post_friend_request_accept(
+    ExtractUser(mut user): ExtractUser,
+    State(state): State<AppState>,
+    query: Query<UserName>,
+) -> Response {
+    let query = query.sanitize();
+
+    let target = match find_user_by_name(&state.database.user_collection, &query.name).await {
+        Ok(Some(target)) => target,
+        Ok(None) => {
+            return Response::builder()
+                .status(StatusCode::NOT_FOUND)
+                .body("User not found or no pending request from user".into())
+                .unwrap();
+        }
+        Err(_) => {
+            return Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body("An error occurred while fetching user".into())
+                .unwrap();
+        }
+    };
+
+    if !user.friend_requests.contains_key(&target.key) {
+        return Response::builder()
+            .status(StatusCode::NOT_FOUND)
+            .body("User not found or no pending request from user".into())
+            .unwrap();
+    };
+
+    user.friend_requests.remove(&target.key);
+    match user.save(&state.database.user_collection).await {
+        Ok(_) => {}
+        Err(_) => {
+            return Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body("An error occured while saving the user".into())
+                .unwrap();
+        }
+    }
+
+    let already_friends = match are_friends(
+        &state.database.friendship_collection,
+        vec![user.key.clone(), target.key.clone()],
+    )
+    .await
+    {
+        Ok(already_friends) => already_friends,
+        Err(_) => {
+            return Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body("An error occured while trying to fetch friendship".into())
+                .unwrap();
+        }
+    };
+
+    if already_friends {
+        return Response::builder()
+            .status(StatusCode::BAD_REQUEST)
+            .body("You are already friends with the user".into())
+            .unwrap();
+    }
+
+    let new_friendship = Friendship::new(vec![user.key, target.key]);
+    match new_friendship
+        .save(&state.database.friendship_collection)
+        .await
+    {
+        Ok(_) => {}
+        Err(_) => {
+            return Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body("An error occured while saving the friendship".into())
+                .unwrap();
+        }
+    }
+
+    (StatusCode::OK, "Friend request accepted").into_response()
+}
+
 pub fn router() -> Router<AppState> {
     Router::<AppState>::new()
         .route("/friend/request", get(get_friend_request))
         .route("/friend/request", post(post_friend_request))
+        .route("/friend/request/accept", post(post_friend_request_accept))
 }
