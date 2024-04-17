@@ -21,6 +21,7 @@ async fn main() -> io::Result<()> {
     let app_state = AppState { database: db };
 
     let app = Router::<AppState>::new()
+        .nest("/", resources::metrics::router())
         .nest("/", resources::ping::router())
         .nest("/", resources::user::router())
         .nest("/", resources::users::router())

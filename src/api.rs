@@ -14,6 +14,7 @@ pub mod models {
 
 #[path = "./resources"]
 pub mod resources {
+    pub mod metrics;
     pub mod ping;
     pub mod user;
     pub mod users;

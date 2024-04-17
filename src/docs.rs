@@ -8,6 +8,7 @@ use crate::api::{self, models::{enums::PrivacyLevel, response_models::{MessageRe
         description="A webservice for handling LemCom online services. LemCom will be a messaging application for desktop written in Rust.\n\nAll available docs: Rapidoc (/docs), Swagger (/swagger) and Redoc (/redoc)."
     ),
     paths(
+        api::resources::metrics::get_metrics_usage,
         api::resources::ping::get_ping,  
         api::resources::user::get_user,
         api::resources::user::get_user_search,
