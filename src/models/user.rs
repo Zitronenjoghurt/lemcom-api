@@ -105,9 +105,9 @@ impl User {
         }
         let end = std::cmp::min(start + page_size as usize, requests.len());
 
-        let page_keys: Vec<String> = requests[start..end]
+        let page_keys: Vec<&str> = requests[start..end]
             .iter()
-            .map(|(k, _)| (*k).clone())
+            .map(|(k, _)| k.as_str())
             .collect();
 
         let users = find_users_by_keys(collection, page_keys).await?;
@@ -139,7 +139,7 @@ impl User {
 
 pub async fn find_user_by_key(
     collection: &Collection<User>,
-    key: String,
+    key: &str,
 ) -> mongodb::error::Result<Option<User>> {
     let filter = doc! { "key": key };
     let user = collection.find_one(Some(filter), None).await?;
@@ -148,7 +148,7 @@ pub async fn find_user_by_key(
 
 async fn find_users_by_keys(
     collection: &Collection<User>,
-    keys: Vec<String>,
+    keys: Vec<&str>,
 ) -> mongodb::error::Result<Vec<Option<User>>> {
     let futures = keys
         .into_iter()
