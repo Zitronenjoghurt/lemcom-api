@@ -20,13 +20,13 @@ impl FromRequestParts<AppState> for ExtractUser {
             .headers
             .get(&api_key_header)
             .ok_or((
-                StatusCode::BAD_REQUEST,
+                StatusCode::UNAUTHORIZED,
                 "API key header is missing, check /docs for more information",
             ))?
             .to_str()
             .map_err(|_| {
                 (
-                    StatusCode::BAD_REQUEST,
+                    StatusCode::UNAUTHORIZED,
                     "Invalid API key format, check /docs for more information",
                 )
             })?;

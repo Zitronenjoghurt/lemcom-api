@@ -18,7 +18,6 @@ use axum::{routing::get, Json, Router};
     params(PaginationQuery),
     responses(
         (status = 200, description = "Publicly visible users", body = UserList),
-        (status = 400, description = "Missing API Key or Invalid header/query"),
         (status = 401, description = "Invalid API Key"),
     ),
     security(

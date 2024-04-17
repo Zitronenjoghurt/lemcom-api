@@ -20,6 +20,9 @@ pub struct UserSettings {
     /// Who is able to find you using the search functionality
     #[serde(default = "default_public")]
     pub show_in_search: PrivacyLevel,
+    /// If people can send you friend requests when they know your username
+    #[serde(default = "default_true")]
+    pub allow_friend_requests: bool,
 }
 
 fn default_friends() -> PrivacyLevel {
@@ -28,6 +31,10 @@ fn default_friends() -> PrivacyLevel {
 
 fn default_public() -> PrivacyLevel {
     PrivacyLevel::Public
+}
+
+fn default_true() -> bool {
+    true
 }
 
 impl UserSettings {
@@ -44,6 +51,9 @@ impl UserSettings {
         if let Some(new_value) = &data.show_in_search {
             self.show_in_search = new_value.clone();
         }
+        if let Some(new_value) = &data.allow_friend_requests {
+            self.allow_friend_requests = *new_value;
+        }
     }
 }
 
@@ -54,6 +64,7 @@ impl Default for UserSettings {
             show_join_date: PrivacyLevel::Public,
             show_online_date: PrivacyLevel::Public,
             show_in_search: PrivacyLevel::Public,
+            allow_friend_requests: true,
         }
     }
 }

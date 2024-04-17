@@ -29,6 +29,8 @@ pub struct UserSettingsEdit {
     pub show_online: Option<PrivacyLevel>,
     /// If other people should be able to find you in search using your username
     pub show_in_search: Option<PrivacyLevel>,
+    /// If other people should be able to send you friend requests using your username
+    pub allow_friend_requests: Option<bool>,
 }
 
 #[derive(Deserialize, IntoParams)]

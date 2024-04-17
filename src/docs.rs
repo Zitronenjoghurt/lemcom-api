@@ -9,6 +9,7 @@ use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response
     ),
     paths(
         api::resources::friend::get_friend_request,
+        api::resources::friend::post_friend_request,
         api::resources::metrics::get_metrics_usage,
         api::resources::ping::get_ping,  
         api::resources::user::get_user,

@@ -11,7 +11,6 @@ use std::collections::HashMap;
     path = "/metrics/usage",
     responses(
         (status = 200, description = "Endpoint usage data", body = HashMap<String, u64>),
-        (status = 400, description = "Missing API Key or Invalid header/query"),
         (status = 401, description = "Invalid API Key"),
     ),
     security(
