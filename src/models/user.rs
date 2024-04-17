@@ -1,8 +1,13 @@
-use crate::api::models::response_models::{UserPrivateInformation, UserPublicInformation};
 use crate::api::models::{
     enums::PermissionLevel,
     response_models::{FriendRequests, Pagination},
     user_settings::UserSettings,
+};
+use crate::api::models::{
+    friendship::{find_friendships_by_key, Friendship},
+    response_models::{
+        FriendList, FriendRequestInformation, UserPrivateInformation, UserPublicInformation,
+    },
 };
 use crate::api::utils::time_operations::{nanos_to_date, timestamp_now_nanos};
 use futures::{future::try_join_all, TryStreamExt};
@@ -14,7 +19,7 @@ use mongodb::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use super::response_models::FriendRequestInformation;
+use super::response_models::FriendInformation;
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
@@ -85,6 +90,77 @@ impl User {
             last_online_date,
             permission_level: self.permission_level.clone(),
         }
+    }
+
+    pub async fn friends_with_key_and_stamp(
+        &self,
+        collection: &Collection<Friendship>,
+    ) -> mongodb::error::Result<Vec<(String, u64)>> {
+        let friendships = find_friendships_by_key(collection, &self.key).await?;
+        let mut result: Vec<(String, u64)> = Vec::new();
+
+        for friendship in friendships {
+            let other_key = friendship
+                .keys
+                .iter()
+                .find(|k| *k != &self.key)
+                .expect("Expected another key in the keys vector");
+
+            result.push((other_key.to_string(), friendship.created_stamp));
+        }
+
+        Ok(result)
+    }
+
+    pub async fn friend_list_with_pagination(
+        &self,
+        user_collection: &Collection<User>,
+        friendship_collection: &Collection<Friendship>,
+        page: u32,
+        page_size: u32,
+    ) -> mongodb::error::Result<FriendList> {
+        let friends: Vec<(String, u64)> = self
+            .friends_with_key_and_stamp(friendship_collection)
+            .await?;
+
+        let start = ((page - 1) * page_size) as usize;
+        if start >= friends.len() {
+            return Ok(FriendList {
+                friends: vec![],
+                pagination: Pagination::new(friends.len() as u32, page, page_size, 0),
+            });
+        }
+        let end = std::cmp::min(start + page_size as usize, friends.len());
+
+        let page_keys: Vec<&str> = friends[start..end]
+            .iter()
+            .map(|(k, _)| k.as_str())
+            .collect();
+
+        let users = find_users_by_keys(user_collection, page_keys).await?;
+
+        let friend_information = users
+            .into_iter()
+            .zip(friends[start..end].iter().map(|(_, t)| t))
+            .filter_map(|(user_option, timestamp)| {
+                user_option.map(|user| FriendInformation {
+                    user: user.public_information(false),
+                    since_date: nanos_to_date(*timestamp),
+                })
+            })
+            .collect::<Vec<_>>();
+
+        let pagination = Pagination::new(
+            friends.len() as u32,
+            page,
+            page_size,
+            friend_information.len() as u32,
+        );
+
+        Ok(FriendList {
+            friends: friend_information,
+            pagination,
+        })
     }
 
     pub async fn friend_requests_with_pagination(

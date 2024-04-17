@@ -1,5 +1,5 @@
 use utoipa::{openapi::security::{ApiKey, ApiKeyValue, SecurityScheme}, Modify, OpenApi};
-use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response_models::{FriendRequestInformation, FriendRequests, MessageResponse, Pagination, UserList, UserPrivateInformation, UserPublicInformation}, user_settings::UserSettings}};
+use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response_models::{FriendList, FriendRequestInformation, FriendRequests, MessageResponse, Pagination, UserList, UserPrivateInformation, UserPublicInformation}, user_settings::UserSettings}};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -8,6 +8,7 @@ use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response
         description="A webservice for handling LemCom online services. LemCom will be a messaging application for desktop written in Rust.\n\nAll available docs: Rapidoc (/docs), Swagger (/swagger) and Redoc (/redoc)."
     ),
     paths(
+        api::resources::friend::get_friend,
         api::resources::friend::get_friend_request,
         api::resources::friend::post_friend_request,
         api::resources::friend::post_friend_request_accept,
@@ -27,7 +28,7 @@ use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response
     ),
     modifiers(&SecurityAddon),
     components(
-        schemas(MessageResponse, UserPublicInformation, UserPrivateInformation, UserSettings, UserList, Pagination, PrivacyLevel, PermissionLevel, FriendRequestInformation, FriendRequests),
+        schemas(MessageResponse, UserPublicInformation, UserPrivateInformation, UserSettings, UserList, Pagination, PrivacyLevel, PermissionLevel, FriendRequestInformation, FriendRequests, FriendList),
     )
 )]
 pub struct ApiDoc;

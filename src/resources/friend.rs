@@ -10,6 +10,50 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::post;
 use axum::{routing::get, Json, Router};
 
+/// Retrieve your current friends.
+///
+/// This endpoint returns a list of users that have sent you friend requests.
+#[utoipa::path(
+    get,
+    path = "/friend",
+    params(PaginationQuery),
+    responses(
+        (status = 200, description = "Your friends", body = FriendList),
+        (status = 401, description = "Invalid API Key"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    tag = "Friends"
+)]
+async fn get_friend(
+    ExtractUser(user): ExtractUser,
+    State(state): State<AppState>,
+    query: Query<PaginationQuery>,
+) -> Response {
+    let query = query.sanitize();
+    let page = query.page.unwrap_or(1);
+    let page_size = query.page_size.unwrap_or(10);
+
+    let result = user
+        .friend_list_with_pagination(
+            &state.database.user_collection,
+            &state.database.friendship_collection,
+            page,
+            page_size,
+        )
+        .await;
+
+    match result {
+        Ok(requests) => Json(requests).into_response(),
+        Err(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            ("An error occured while fetching your friendships"),
+        )
+            .into_response(),
+    }
+}
+
 /// Retrieve pending friend requests.
 ///
 /// This endpoint returns a list of users that have sent you friend requests.
@@ -247,6 +291,7 @@ async fn post_friend_request_accept(
 
 pub fn router() -> Router<AppState> {
     Router::<AppState>::new()
+        .route("/friend", get(get_friend))
         .route("/friend/request", get(get_friend_request))
         .route("/friend/request", post(post_friend_request))
         .route("/friend/request/accept", post(post_friend_request_accept))

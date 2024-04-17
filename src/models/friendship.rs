@@ -1,11 +1,11 @@
+use crate::api::utils::time_operations::timestamp_now_nanos;
+use futures::TryStreamExt;
 use mongodb::{
     bson::{self, doc, oid::ObjectId},
-    options::UpdateOptions,
+    options::{InsertOneOptions, UpdateOptions},
     Collection,
 };
 use serde::{Deserialize, Serialize};
-
-use crate::api::utils::time_operations::timestamp_now_nanos;
 
 #[derive(Serialize, Deserialize)]
 pub struct Friendship {
@@ -25,11 +25,15 @@ impl Friendship {
     }
 
     pub async fn save(&self, collection: &Collection<Friendship>) -> mongodb::error::Result<()> {
-        let filter = doc! { "_id": &self.id };
-        let update = doc! { "$set": bson::to_bson(self)? };
-        let options = UpdateOptions::builder().upsert(true).build();
-
-        collection.update_one(filter, update, Some(options)).await?;
+        if let Some(id) = &self.id {
+            let filter = doc! { "_id": id };
+            let update = doc! { "$set": bson::to_bson(self)? };
+            let options = UpdateOptions::builder().upsert(true).build();
+            collection.update_one(filter, update, Some(options)).await?;
+        } else {
+            let options = InsertOneOptions::builder().build();
+            collection.insert_one(self, Some(options)).await?;
+        }
         Ok(())
     }
 }
@@ -41,6 +45,16 @@ pub async fn find_friendship_by_keys(
     let filter = doc! { "keys": { "$all": keys.clone() }};
     let friendship = collection.find_one(filter, None).await?;
     Ok(friendship)
+}
+
+pub async fn find_friendships_by_key(
+    collection: &Collection<Friendship>,
+    key: &str,
+) -> mongodb::error::Result<Vec<Friendship>> {
+    let filter = doc! { "keys": key};
+    let cursor = collection.find(filter, None).await?;
+    let friendships: Vec<Friendship> = cursor.try_collect().await?;
+    Ok(friendships)
 }
 
 pub async fn are_friends(
