@@ -57,6 +57,14 @@ pub async fn find_friendships_by_key(
     Ok(friendships)
 }
 
+pub async fn remove_friendship_by_id(
+    collection: &Collection<Friendship>,
+    object_id: &ObjectId,
+) -> Result<mongodb::results::DeleteResult, mongodb::error::Error> {
+    let filter = doc! { "_id": object_id };
+    collection.delete_one(filter, None).await
+}
+
 pub async fn are_friends(
     collection: &Collection<Friendship>,
     keys: Vec<String>,

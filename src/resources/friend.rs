@@ -1,4 +1,6 @@
-use crate::api::models::friendship::{are_friends, Friendship};
+use crate::api::models::friendship::{
+    are_friends, find_friendship_by_keys, remove_friendship_by_id, Friendship,
+};
 use crate::api::models::query_models::{PaginationQuery, UserName};
 use crate::api::models::user::find_user_by_name;
 use crate::api::security::authentication::ExtractUser;
@@ -7,7 +9,7 @@ use crate::AppState;
 use axum::extract::{Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::routing::post;
+use axum::routing::{delete, post};
 use axum::{routing::get, Json, Router};
 
 /// Retrieve your current friends.
@@ -51,6 +53,96 @@ async fn get_friend(
             ("An error occured while fetching your friendships"),
         )
             .into_response(),
+    }
+}
+
+/// Remove a friend.
+///
+/// This endpoint allows the user to remove a friend..
+#[utoipa::path(
+    delete,
+    path = "/friend",
+    params(UserName),
+    responses(
+        (status = 200, description = "Friend successfully removed"),
+        (status = 400, description = "Unable to remove friend"),
+        (status = 401, description = "Invalid API Key"),
+        (status = 404, description = "User not found"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    tag = "Friends"
+)]
+async fn delete_friend(
+    ExtractUser(user): ExtractUser,
+    State(state): State<AppState>,
+    query: Query<UserName>,
+) -> Response {
+    let query = query.sanitize();
+
+    let target = match find_user_by_name(&state.database.user_collection, &query.name).await {
+        Ok(target) => match target {
+            Some(target) => target,
+            None => {
+                return Response::builder()
+                    .status(StatusCode::NOT_FOUND)
+                    .body("User not found".into())
+                    .unwrap();
+            }
+        },
+        Err(_) => {
+            return Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body("An error occurred while fetching user".into())
+                .unwrap();
+        }
+    };
+
+    let friendship = match find_friendship_by_keys(
+        &state.database.friendship_collection,
+        vec![target.key, user.key],
+    )
+    .await
+    {
+        Ok(friendship) => match friendship {
+            Some(friendship) => {
+                if friendship.id.is_none() {
+                    return Response::builder()
+                        .status(StatusCode::INTERNAL_SERVER_ERROR)
+                        .body("An error occurred while fetching friendship".into())
+                        .unwrap();
+                } else {
+                    friendship
+                }
+            }
+            None => {
+                return Response::builder()
+                    .status(StatusCode::BAD_REQUEST)
+                    .body("No friends with the user".into())
+                    .unwrap();
+            }
+        },
+        Err(_) => {
+            return Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body("An error occurred while fetching friendship".into())
+                .unwrap();
+        }
+    };
+
+    match remove_friendship_by_id(
+        &state.database.friendship_collection,
+        &friendship.id.unwrap(),
+    )
+    .await
+    {
+        Ok(_) => Json((StatusCode::OK, "Friend successfully removed")).into_response(),
+        Err(_) => Json((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "An error occured while removing friendship",
+        ))
+        .into_response(),
     }
 }
 
@@ -292,6 +384,7 @@ async fn post_friend_request_accept(
 pub fn router() -> Router<AppState> {
     Router::<AppState>::new()
         .route("/friend", get(get_friend))
+        .route("/friend", delete(delete_friend))
         .route("/friend/request", get(get_friend_request))
         .route("/friend/request", post(post_friend_request))
         .route("/friend/request/accept", post(post_friend_request_accept))
