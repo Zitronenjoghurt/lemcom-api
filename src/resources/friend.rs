@@ -5,7 +5,7 @@ use crate::api::models::query_models::{PaginationQuery, UserName};
 use crate::api::models::user::find_user_by_name;
 use crate::api::security::authentication::ExtractUser;
 use crate::api::utils::time_operations::timestamp_now_nanos;
-use crate::AppState;
+use crate::{unpack_result, unpack_result_option, AppState};
 use axum::extract::{Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -37,23 +37,18 @@ async fn get_friend(
     let page = query.page.unwrap_or(1);
     let page_size = query.page_size.unwrap_or(10);
 
-    let result = user
-        .friend_list_with_pagination(
+    let friend_list = unpack_result!(
+        user.friend_list_with_pagination(
             &state.database.user_collection,
             &state.database.friendship_collection,
             page,
             page_size,
         )
-        .await;
+        .await,
+        "An error occured while fetching your friendships"
+    );
 
-    match result {
-        Ok(requests) => Json(requests).into_response(),
-        Err(_) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            ("An error occured while fetching your friendships"),
-        )
-            .into_response(),
-    }
+    Json(friend_list).into_response()
 }
 
 /// Remove a friend.
@@ -81,69 +76,34 @@ async fn delete_friend(
 ) -> Response {
     let query = query.sanitize();
 
-    let target = match find_user_by_name(&state.database.user_collection, &query.name).await {
-        Ok(target) => match target {
-            Some(target) => target,
-            None => {
-                return Response::builder()
-                    .status(StatusCode::NOT_FOUND)
-                    .body("User not found".into())
-                    .unwrap();
-            }
-        },
-        Err(_) => {
-            return Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body("An error occurred while fetching user".into())
-                .unwrap();
-        }
-    };
+    let target = unpack_result_option!(
+        find_user_by_name(&state.database.user_collection, &query.name).await,
+        StatusCode::NOT_FOUND,
+        "User not found",
+        "An error occurred while fetching user"
+    );
 
-    let friendship = match find_friendship_by_keys(
-        &state.database.friendship_collection,
-        vec![target.key, user.key],
-    )
-    .await
-    {
-        Ok(friendship) => match friendship {
-            Some(friendship) => {
-                if friendship.id.is_none() {
-                    return Response::builder()
-                        .status(StatusCode::INTERNAL_SERVER_ERROR)
-                        .body("An error occurred while fetching friendship".into())
-                        .unwrap();
-                } else {
-                    friendship
-                }
-            }
-            None => {
-                return Response::builder()
-                    .status(StatusCode::BAD_REQUEST)
-                    .body("No friends with the user".into())
-                    .unwrap();
-            }
-        },
-        Err(_) => {
-            return Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body("An error occurred while fetching friendship".into())
-                .unwrap();
-        }
-    };
+    let friendship = unpack_result_option!(
+        find_friendship_by_keys(
+            &state.database.friendship_collection,
+            vec![target.key, user.key],
+        )
+        .await,
+        StatusCode::BAD_REQUEST,
+        "Not friend with the user",
+        "An error occured while fetching friendship"
+    );
 
-    match remove_friendship_by_id(
-        &state.database.friendship_collection,
-        &friendship.id.unwrap(),
-    )
-    .await
-    {
-        Ok(_) => Json((StatusCode::OK, "Friend successfully removed")).into_response(),
-        Err(_) => Json((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "An error occured while removing friendship",
-        ))
-        .into_response(),
-    }
+    unpack_result!(
+        remove_friendship_by_id(
+            &state.database.friendship_collection,
+            &friendship.id.unwrap(),
+        )
+        .await,
+        "An error occured while removing friendship"
+    );
+
+    Json((StatusCode::OK, "Friend successfully removed")).into_response()
 }
 
 /// Retrieve pending friend requests.
@@ -171,18 +131,12 @@ async fn get_friend_request(
     let page = query.page.unwrap_or(1);
     let page_size = query.page_size.unwrap_or(10);
 
-    let result = user
-        .friend_requests_with_pagination(&state.database.user_collection, page, page_size)
-        .await;
-
-    match result {
-        Ok(requests) => Json(requests).into_response(),
-        Err(_) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            ("An error occured while fetching your friend requests"),
-        )
-            .into_response(),
-    }
+    let requests = unpack_result!(
+        user.friend_requests_with_pagination(&state.database.user_collection, page, page_size)
+            .await,
+        "An error occured while fetching your friend requests"
+    );
+    Json(requests).into_response()
 }
 
 /// Send friend requests.
@@ -210,77 +164,64 @@ async fn post_friend_request(
 ) -> Response {
     let query = query.sanitize();
 
-    let mut target = match find_user_by_name(&state.database.user_collection, &query.name).await {
-        Ok(Some(target)) => {
-            if target.key == user.key {
-                return Response::builder()
-                    .status(StatusCode::BAD_REQUEST)
-                    .body("Can't send a friend request to yourself".into())
-                    .unwrap();
-            }
-            target
-        }
-        Ok(None) => {
-            return Response::builder()
-                .status(StatusCode::NOT_FOUND)
-                .body("User not found or user does not allow friend requests".into())
-                .unwrap();
-        }
-        Err(_) => {
-            return Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body("An error occurred while fetching user".into())
-                .unwrap();
-        }
-    };
+    let mut target = unpack_result_option!(
+        find_user_by_name(&state.database.user_collection, &query.name).await,
+        StatusCode::NOT_FOUND,
+        "User not found or user does not allow friend requests",
+        "An error occurred while fetching user"
+    );
 
-    if !target.settings.allow_friend_requests {
-        return Response::builder()
-            .status(StatusCode::NOT_FOUND)
-            .body("User not found or user does not allow friend requests".into())
-            .unwrap();
+    if target.key == user.key {
+        return Json((
+            StatusCode::BAD_REQUEST,
+            "Can't send a friend request to yourself",
+        ))
+        .into_response();
     }
 
-    let already_friends = match are_friends(
-        &state.database.friendship_collection,
-        vec![user.key.clone(), target.key.clone()],
-    )
-    .await
-    {
-        Ok(already_friends) => already_friends,
-        Err(_) => {
-            return Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body("An error occurred while fetching friendship".into())
-                .unwrap();
-        }
-    };
+    if !target.settings.allow_friend_requests {
+        return Json((
+            StatusCode::NOT_FOUND,
+            "User not found or user does not allow friend requests",
+        ))
+        .into_response();
+    }
+
+    let already_friends = unpack_result!(
+        are_friends(
+            &state.database.friendship_collection,
+            vec![user.key.clone(), target.key.clone()],
+        )
+        .await,
+        "An error occurred while fetching friendship"
+    );
 
     if already_friends {
-        return Response::builder()
-            .status(StatusCode::BAD_REQUEST)
-            .body("You are already friends with the user".into())
-            .unwrap();
+        return Json((
+            StatusCode::BAD_REQUEST,
+            "You are already friends with the user",
+        ))
+        .into_response();
     }
 
     if target.friend_requests.contains_key(&user.key) {
-        return Response::builder()
-            .status(StatusCode::BAD_REQUEST)
-            .body("Already sent a request to the user".into())
-            .unwrap();
+        return Json((
+            StatusCode::BAD_REQUEST,
+            "Already sent a request to the user",
+        ))
+        .into_response();
     }
 
     target
         .friend_requests
         .insert(user.key, timestamp_now_nanos());
-    match target.save(&state.database.user_collection).await {
-        Ok(_) => (StatusCode::OK, "Friend request sent").into_response(),
-        Err(_) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "An error occured while saving the target user",
-        )
-            .into_response(),
-    }
+
+    unpack_result!(
+        target.save(&state.database.user_collection).await,
+        "An error occured while saving the target user"
+    );
+
+    Json((StatusCode::OK, "Friend request sent")).into_response()
 }
 
 /// Accept a pending friend requests.
@@ -308,75 +249,51 @@ async fn post_friend_request_accept(
 ) -> Response {
     let query = query.sanitize();
 
-    let target = match find_user_by_name(&state.database.user_collection, &query.name).await {
-        Ok(Some(target)) => target,
-        Ok(None) => {
-            return Response::builder()
-                .status(StatusCode::NOT_FOUND)
-                .body("User not found or no pending request from user".into())
-                .unwrap();
-        }
-        Err(_) => {
-            return Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body("An error occurred while fetching user".into())
-                .unwrap();
-        }
-    };
+    let target = unpack_result_option!(
+        find_user_by_name(&state.database.user_collection, &query.name).await,
+        StatusCode::NOT_FOUND,
+        "User not found or no pending request from user",
+        "An error occurred while fetching user"
+    );
 
     if !user.friend_requests.contains_key(&target.key) {
-        return Response::builder()
-            .status(StatusCode::NOT_FOUND)
-            .body("User not found or no pending request from user".into())
-            .unwrap();
+        return (
+            StatusCode::NOT_FOUND,
+            "User not found or no pending request from user",
+        )
+            .into_response();
     };
 
     user.friend_requests.remove(&target.key);
-    match user.save(&state.database.user_collection).await {
-        Ok(_) => {}
-        Err(_) => {
-            return Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body("An error occured while saving the user".into())
-                .unwrap();
-        }
-    }
+    unpack_result!(
+        user.save(&state.database.user_collection).await,
+        "An error occured while saving the user"
+    );
 
-    let already_friends = match are_friends(
-        &state.database.friendship_collection,
-        vec![user.key.clone(), target.key.clone()],
-    )
-    .await
-    {
-        Ok(already_friends) => already_friends,
-        Err(_) => {
-            return Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body("An error occured while trying to fetch friendship".into())
-                .unwrap();
-        }
-    };
+    let already_friends = unpack_result!(
+        are_friends(
+            &state.database.friendship_collection,
+            vec![user.key.clone(), target.key.clone()],
+        )
+        .await,
+        "An error occured while trying to fetch friendship"
+    );
 
     if already_friends {
-        return Response::builder()
-            .status(StatusCode::BAD_REQUEST)
-            .body("You are already friends with the user".into())
-            .unwrap();
+        return (
+            StatusCode::BAD_REQUEST,
+            "You are already friends with the user",
+        )
+            .into_response();
     }
 
     let new_friendship = Friendship::new(vec![user.key, target.key]);
-    match new_friendship
-        .save(&state.database.friendship_collection)
-        .await
-    {
-        Ok(_) => {}
-        Err(_) => {
-            return Response::builder()
-                .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body("An error occured while saving the friendship".into())
-                .unwrap();
-        }
-    }
+    unpack_result!(
+        new_friendship
+            .save(&state.database.friendship_collection)
+            .await,
+        "An error occured while saving the friendship"
+    );
 
     (StatusCode::OK, "Friend request accepted").into_response()
 }

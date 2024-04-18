@@ -2,7 +2,7 @@ use crate::api::models::response_models::UserPublicInformation;
 use crate::api::models::user::get_public_users;
 use crate::api::models::{query_models::PaginationQuery, response_models::UserList};
 use crate::api::security::authentication::ExtractUser;
-use crate::AppState;
+use crate::{unpack_result, AppState};
 use axum::extract::{Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
@@ -35,24 +35,20 @@ async fn get_users(
     let page = query.page.unwrap_or(1);
     let page_size = query.page_size.unwrap_or(10);
 
-    match get_public_users(&state.database.user_collection, page, page_size).await {
-        Ok((users, pagination)) => {
-            let public_information: Vec<UserPublicInformation> = users
-                .iter()
-                .map(|user| user.public_information(false)) // ToDo: is_friend set to false, implement when friend feature is added
-                .collect();
-            let user_list = UserList {
-                users: public_information,
-                pagination,
-            };
-            Json(user_list).into_response()
-        }
-        Err(_) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            ("An error occured while fetching users"),
-        )
-            .into_response(),
-    }
+    let (users, pagination) = unpack_result!(
+        get_public_users(&state.database.user_collection, page, page_size).await,
+        "An error occured while fetching users"
+    );
+
+    let public_information: Vec<UserPublicInformation> = users
+        .iter()
+        .map(|user| user.public_information(false)) // ToDo: is_friend set to false, implement when friend feature is added
+        .collect();
+    let user_list = UserList {
+        users: public_information,
+        pagination,
+    };
+    Json(user_list).into_response()
 }
 
 pub fn router() -> Router<AppState> {

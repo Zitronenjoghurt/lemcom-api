@@ -1,8 +1,11 @@
+use crate::api::models::friendship::are_friends;
 use crate::api::models::query_models::UserSettingsEdit;
 use crate::api::models::user_settings::UserSettings;
-use crate::api::models::{query_models::UserName, response_models::UserPrivateInformation, user};
+use crate::api::models::{
+    query_models::UserName, response_models::UserPrivateInformation, user::find_user_by_name,
+};
 use crate::api::security::authentication::ExtractUser;
-use crate::AppState;
+use crate::{unpack_result, unpack_result_option, AppState};
 use axum::extract::State;
 use axum::response::Response;
 use axum::routing::patch;
@@ -45,23 +48,33 @@ async fn get_user(ExtractUser(user): ExtractUser) -> Json<UserPrivateInformation
     tag = "User"
 )]
 async fn get_user_search(
-    ExtractUser(_): ExtractUser,
+    ExtractUser(user): ExtractUser,
     State(state): State<AppState>,
     query: Query<UserName>,
 ) -> Response {
     let query = query.sanitize();
-    match user::find_user_by_name(&state.database.user_collection, &query.name).await {
-        Ok(Some(user)) => {
-            // ToDo: is_friend set to false for both, implement when friend feature is added
-            if user.settings.show_in_search.is_visible(false) {
-                Json(user.public_information(false)).into_response()
-            } else {
-                (StatusCode::NOT_FOUND, "User not found").into_response()
-            }
-        }
-        Ok(None) => (StatusCode::NOT_FOUND, "User not found").into_response(),
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Database error").into_response(),
-    }
+
+    let target = unpack_result_option!(
+        find_user_by_name(&state.database.user_collection, &query.name).await,
+        StatusCode::NOT_FOUND,
+        "User not found",
+        "An error occured while fetching user"
+    );
+
+    let is_friend = unpack_result!(
+        are_friends(
+            &state.database.friendship_collection,
+            vec![user.key, target.key.clone()],
+        )
+        .await,
+        "An error occured while trying to fetch friendship"
+    );
+
+    if !target.settings.show_in_search.is_visible(is_friend) {
+        return (StatusCode::NOT_FOUND, "User not found").into_response();
+    };
+
+    Json(target.public_information(is_friend)).into_response()
 }
 
 /// Retrieve own user settings.
@@ -105,14 +118,12 @@ async fn patch_user_settings(
     query: Query<UserSettingsEdit>,
 ) -> Response {
     user.settings.update(query);
-    match user.save(&state.database.user_collection).await {
-        Ok(_) => Json(user.settings).into_response(),
-        Err(_) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Failed to save user settings",
-        )
-            .into_response(),
-    }
+
+    unpack_result!(
+        user.save(&state.database.user_collection).await,
+        "Failed to save user settings"
+    );
+    Json(user.settings).into_response()
 }
 
 pub fn router() -> Router<AppState> {
