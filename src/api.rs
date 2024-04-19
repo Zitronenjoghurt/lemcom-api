@@ -14,6 +14,7 @@ pub mod models {
     pub mod enums;
     pub mod query_models;
     pub mod response_models;
+    pub mod user_profile;
     pub mod user_settings;
 }
 

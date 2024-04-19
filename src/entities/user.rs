@@ -2,6 +2,7 @@ use crate::api::entities::friendship::{find_friendships_by_key, Friendship};
 use crate::api::models::response_models::{
     FriendList, FriendRequestInformation, UserPrivateInformation, UserPublicInformation,
 };
+use crate::api::models::user_profile::UserProfile;
 use crate::api::models::{
     enums::PermissionLevel,
     response_models::{FriendInformation, FriendRequests, Pagination},
@@ -33,6 +34,8 @@ pub struct User {
     pub permission_level: PermissionLevel,
     #[serde(default)]
     pub friend_requests: HashMap<String, u64>,
+    #[serde(default)]
+    pub profile: UserProfile,
 }
 
 impl User {
@@ -65,10 +68,15 @@ impl User {
             last_online_date: nanos_to_date(self.last_access_stamp),
             total_request_count: self.request_count(),
             permission_level: self.permission_level.clone(),
+            profile: self.profile.clone(),
         }
     }
 
-    pub fn public_information(&self, is_friend: bool) -> UserPublicInformation {
+    pub fn public_information(
+        &self,
+        is_friend: bool,
+        include_profile: bool,
+    ) -> UserPublicInformation {
         let joined_date = if self.settings.show_join_date.is_visible(is_friend) {
             Some(nanos_to_date(self.created_stamp))
         } else {
@@ -79,12 +87,19 @@ impl User {
         } else {
             None
         };
+        let profile = if include_profile {
+            Some(self.profile.clone())
+        } else {
+            None
+        };
+
         UserPublicInformation {
             name: self.name.clone(),
             display_name: self.display_name.clone(),
             joined_date,
             last_online_date,
             permission_level: self.permission_level.clone(),
+            profile,
         }
     }
 
@@ -114,6 +129,7 @@ impl User {
         friendship_collection: &Collection<Friendship>,
         page: u32,
         page_size: u32,
+        include_profile: bool,
     ) -> mongodb::error::Result<FriendList> {
         let friends: Vec<(String, u64)> = self
             .friends_with_key_and_stamp(friendship_collection)
@@ -140,7 +156,7 @@ impl User {
             .zip(friends[start..end].iter().map(|(_, t)| t))
             .filter_map(|(user_option, timestamp)| {
                 user_option.map(|user| FriendInformation {
-                    user: user.public_information(false),
+                    user: user.public_information(true, include_profile),
                     since_date: nanos_to_date(*timestamp),
                 })
             })
@@ -164,6 +180,7 @@ impl User {
         collection: &Collection<User>,
         page: u32,
         page_size: u32,
+        include_profile: bool,
     ) -> mongodb::error::Result<FriendRequests> {
         let mut requests: Vec<(&String, &u64)> = self.friend_requests.iter().collect();
         requests.sort_unstable_by(|a, b| b.1.cmp(a.1));
@@ -189,7 +206,7 @@ impl User {
             .zip(requests[start..end].iter().map(|(_, &t)| t))
             .filter_map(|(user_option, timestamp)| {
                 user_option.map(|user| FriendRequestInformation {
-                    user: user.public_information(false),
+                    user: user.public_information(false, include_profile),
                     sent_date: nanos_to_date(timestamp),
                 })
             })

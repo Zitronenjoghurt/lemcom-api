@@ -1,6 +1,6 @@
 use crate::api::entities::friendship::are_friends;
 use crate::api::entities::user::find_user_by_name;
-use crate::api::models::query_models::UserSettingsEdit;
+use crate::api::models::query_models::{IncludeUserProfile, UserProfileEdit, UserSettingsEdit};
 use crate::api::models::user_settings::UserSettings;
 use crate::api::models::{query_models::UserName, response_models::UserPrivateInformation};
 use crate::api::security::authentication::ExtractUser;
@@ -9,6 +9,7 @@ use axum::extract::State;
 use axum::response::Response;
 use axum::routing::patch;
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
+use axum_valid::Valid;
 
 /// Retrieve own user information.
 ///
@@ -35,7 +36,7 @@ async fn get_user(ExtractUser(user): ExtractUser) -> Json<UserPrivateInformation
 #[utoipa::path(
     get,
     path = "/user/search",
-    params(UserName),
+    params(UserName, IncludeUserProfile),
     responses(
         (status = 200, description = "Personal private user information", body = UserPrivateInformation),
         (status = 401, description = "Invalid API Key"),
@@ -49,12 +50,13 @@ async fn get_user(ExtractUser(user): ExtractUser) -> Json<UserPrivateInformation
 async fn get_user_search(
     ExtractUser(user): ExtractUser,
     State(state): State<AppState>,
-    query: Query<UserName>,
+    name_query: Query<UserName>,
+    profile_query: Query<IncludeUserProfile>,
 ) -> Response {
-    let query = query.sanitize();
+    let name_query = name_query.sanitize();
 
     let target = unpack_result_option!(
-        find_user_by_name(&state.database.user_collection, &query.name).await,
+        find_user_by_name(&state.database.user_collection, &name_query.name).await,
         StatusCode::NOT_FOUND,
         "User not found",
         "An error occured while fetching user"
@@ -73,7 +75,7 @@ async fn get_user_search(
         return (StatusCode::NOT_FOUND, "User not found").into_response();
     };
 
-    Json(target.public_information(is_friend)).into_response()
+    Json(target.public_information(is_friend, profile_query.include_user_profile)).into_response()
 }
 
 /// Retrieve own user settings.
@@ -125,10 +127,42 @@ async fn patch_user_settings(
     Json(user.settings).into_response()
 }
 
+/// Edit own user profile.
+///
+/// This endpoint allows you to edit your own user profile.
+#[utoipa::path(
+    patch,
+    path = "/user/profile",
+    params(UserProfileEdit),
+    responses(
+        (status = 200, description = "Your updated user profile", body = UserProfile),
+        (status = 401, description = "Invalid API Key"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    tag = "User"
+)]
+async fn patch_user_profile(
+    ExtractUser(mut user): ExtractUser,
+    State(state): State<AppState>,
+    query: Valid<Query<UserProfileEdit>>,
+) -> Response {
+    let query = query.sanitize();
+    user.profile.update(query);
+
+    unpack_result!(
+        user.save(&state.database.user_collection).await,
+        "Failed to save user profile"
+    );
+    Json(user.profile).into_response()
+}
+
 pub fn router() -> Router<AppState> {
     Router::<AppState>::new()
         .route("/user", get(get_user))
         .route("/user/search", get(get_user_search))
         .route("/user/settings", get(get_user_settings))
         .route("/user/settings", patch(patch_user_settings))
+        .route("/user/profile", patch(patch_user_profile))
 }

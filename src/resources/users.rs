@@ -1,4 +1,5 @@
 use crate::api::entities::user::get_public_users;
+use crate::api::models::query_models::IncludeUserProfile;
 use crate::api::models::response_models::UserPublicInformation;
 use crate::api::models::{query_models::PaginationQuery, response_models::UserList};
 use crate::api::security::authentication::ExtractUser;
@@ -15,7 +16,7 @@ use axum::{routing::get, Json, Router};
 #[utoipa::path(
     get,
     path = "/users",
-    params(PaginationQuery),
+    params(PaginationQuery, IncludeUserProfile),
     responses(
         (status = 200, description = "Publicly visible users", body = UserList),
         (status = 401, description = "Invalid API Key"),
@@ -28,12 +29,13 @@ use axum::{routing::get, Json, Router};
 async fn get_users(
     ExtractUser(_): ExtractUser,
     State(state): State<AppState>,
-    query: Query<PaginationQuery>,
+    pagination: Query<PaginationQuery>,
+    profile_query: Query<IncludeUserProfile>,
 ) -> Response {
-    let query = query.sanitize();
+    let pagination = pagination.sanitize();
 
-    let page = query.page.unwrap_or(1);
-    let page_size = query.page_size.unwrap_or(10);
+    let page = pagination.page.unwrap_or(1);
+    let page_size = pagination.page_size.unwrap_or(10);
 
     let (users, pagination) = unpack_result!(
         get_public_users(&state.database.user_collection, page, page_size).await,
@@ -42,7 +44,7 @@ async fn get_users(
 
     let public_information: Vec<UserPublicInformation> = users
         .iter()
-        .map(|target| target.public_information(false))
+        .map(|target| target.public_information(false, profile_query.include_user_profile))
         .collect();
     let user_list = UserList {
         users: public_information,

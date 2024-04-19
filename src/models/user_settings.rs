@@ -1,9 +1,8 @@
+use crate::api::models::enums::PrivacyLevel;
 use crate::api::models::query_models::UserSettingsEdit;
 use axum::extract::Query;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
-
-use super::enums::PrivacyLevel;
 
 /// User configuration
 #[derive(Serialize, Deserialize, ToSchema)]

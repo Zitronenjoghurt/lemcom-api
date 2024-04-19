@@ -2,7 +2,7 @@ use crate::api::entities::friendship::{
     are_friends, find_friendship_by_keys, remove_friendship_by_id, Friendship,
 };
 use crate::api::entities::user::find_user_by_name;
-use crate::api::models::query_models::{PaginationQuery, UserName};
+use crate::api::models::query_models::{IncludeUserProfile, PaginationQuery, UserName};
 use crate::api::security::authentication::ExtractUser;
 use crate::api::utils::time_operations::timestamp_now_nanos;
 use crate::{unpack_result, unpack_result_option, AppState};
@@ -18,7 +18,7 @@ use axum::{routing::get, Json, Router};
 #[utoipa::path(
     get,
     path = "/friend",
-    params(PaginationQuery),
+    params(PaginationQuery, IncludeUserProfile),
     responses(
         (status = 200, description = "Your friends", body = FriendList),
         (status = 401, description = "Invalid API Key"),
@@ -31,11 +31,12 @@ use axum::{routing::get, Json, Router};
 async fn get_friend(
     ExtractUser(user): ExtractUser,
     State(state): State<AppState>,
-    query: Query<PaginationQuery>,
+    pagination: Query<PaginationQuery>,
+    profile_query: Query<IncludeUserProfile>,
 ) -> Response {
-    let query = query.sanitize();
-    let page = query.page.unwrap_or(1);
-    let page_size = query.page_size.unwrap_or(10);
+    let pagination = pagination.sanitize();
+    let page = pagination.page.unwrap_or(1);
+    let page_size = pagination.page_size.unwrap_or(10);
 
     let friend_list = unpack_result!(
         user.friend_list_with_pagination(
@@ -43,6 +44,7 @@ async fn get_friend(
             &state.database.friendship_collection,
             page,
             page_size,
+            profile_query.include_user_profile
         )
         .await,
         "An error occured while fetching your friendships"
@@ -112,7 +114,7 @@ async fn delete_friend(
 #[utoipa::path(
     get,
     path = "/friend/request",
-    params(PaginationQuery),
+    params(PaginationQuery, IncludeUserProfile),
     responses(
         (status = 200, description = "Users you have pending friend requests from", body = FriendRequests),
         (status = 401, description = "Invalid API Key"),
@@ -125,15 +127,21 @@ async fn delete_friend(
 async fn get_friend_request(
     ExtractUser(user): ExtractUser,
     State(state): State<AppState>,
-    query: Query<PaginationQuery>,
+    pagination: Query<PaginationQuery>,
+    profile_query: Query<IncludeUserProfile>,
 ) -> Response {
-    let query = query.sanitize();
-    let page = query.page.unwrap_or(1);
-    let page_size = query.page_size.unwrap_or(10);
+    let pagination = pagination.sanitize();
+    let page = pagination.page.unwrap_or(1);
+    let page_size = pagination.page_size.unwrap_or(10);
 
     let requests = unpack_result!(
-        user.friend_requests_with_pagination(&state.database.user_collection, page, page_size)
-            .await,
+        user.friend_requests_with_pagination(
+            &state.database.user_collection,
+            page,
+            page_size,
+            profile_query.include_user_profile
+        )
+        .await,
         "An error occured while fetching your friend requests"
     );
     Json(requests).into_response()
