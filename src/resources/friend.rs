@@ -1,8 +1,8 @@
-use crate::api::models::friendship::{
+use crate::api::entities::friendship::{
     are_friends, find_friendship_by_keys, remove_friendship_by_id, Friendship,
 };
+use crate::api::entities::user::find_user_by_name;
 use crate::api::models::query_models::{PaginationQuery, UserName};
-use crate::api::models::user::find_user_by_name;
 use crate::api::security::authentication::ExtractUser;
 use crate::api::utils::time_operations::timestamp_now_nanos;
 use crate::{unpack_result, unpack_result_option, AppState};

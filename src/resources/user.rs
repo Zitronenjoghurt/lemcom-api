@@ -1,9 +1,8 @@
-use crate::api::models::friendship::are_friends;
+use crate::api::entities::friendship::are_friends;
+use crate::api::entities::user::find_user_by_name;
 use crate::api::models::query_models::UserSettingsEdit;
 use crate::api::models::user_settings::UserSettings;
-use crate::api::models::{
-    query_models::UserName, response_models::UserPrivateInformation, user::find_user_by_name,
-};
+use crate::api::models::{query_models::UserName, response_models::UserPrivateInformation};
 use crate::api::security::authentication::ExtractUser;
 use crate::{unpack_result, unpack_result_option, AppState};
 use axum::extract::State;

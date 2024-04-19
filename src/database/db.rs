@@ -1,8 +1,7 @@
+use crate::api::entities::{friendship::Friendship, user::User};
 use dotenvy::dotenv;
 use mongodb::{error::Result, options::ClientOptions, Client, Collection};
 use std::env;
-
-use crate::api::models::{friendship::Friendship, user::User};
 
 #[derive(Clone)]
 pub struct DB {

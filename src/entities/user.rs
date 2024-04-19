@@ -1,13 +1,11 @@
-use crate::api::models::{
-    enums::PermissionLevel,
-    response_models::{FriendRequests, Pagination},
-    user_settings::UserSettings,
+use crate::api::entities::friendship::{find_friendships_by_key, Friendship};
+use crate::api::models::response_models::{
+    FriendList, FriendRequestInformation, UserPrivateInformation, UserPublicInformation,
 };
 use crate::api::models::{
-    friendship::{find_friendships_by_key, Friendship},
-    response_models::{
-        FriendList, FriendRequestInformation, UserPrivateInformation, UserPublicInformation,
-    },
+    enums::PermissionLevel,
+    response_models::{FriendInformation, FriendRequests, Pagination},
+    user_settings::UserSettings,
 };
 use crate::api::utils::time_operations::{nanos_to_date, timestamp_now_nanos};
 use futures::{future::try_join_all, TryStreamExt};
@@ -18,8 +16,6 @@ use mongodb::{
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-use super::response_models::FriendInformation;
 
 #[derive(Serialize, Deserialize)]
 pub struct User {

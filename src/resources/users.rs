@@ -1,5 +1,5 @@
+use crate::api::entities::user::get_public_users;
 use crate::api::models::response_models::UserPublicInformation;
-use crate::api::models::user::get_public_users;
 use crate::api::models::{query_models::PaginationQuery, response_models::UserList};
 use crate::api::security::authentication::ExtractUser;
 use crate::{unpack_result, AppState};
@@ -42,7 +42,7 @@ async fn get_users(
 
     let public_information: Vec<UserPublicInformation> = users
         .iter()
-        .map(|user| user.public_information(false)) // ToDo: is_friend set to false, implement when friend feature is added
+        .map(|target| target.public_information(false))
         .collect();
     let user_list = UserList {
         users: public_information,

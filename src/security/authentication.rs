@@ -1,11 +1,14 @@
-use crate::{api::models::user, AppState};
+use crate::{
+    api::entities::user::{find_user_by_key, User},
+    AppState,
+};
 use axum::{
     async_trait,
     extract::FromRequestParts,
     http::{request::Parts, HeaderName, StatusCode},
 };
 
-pub struct ExtractUser(pub user::User);
+pub struct ExtractUser(pub User);
 
 #[async_trait]
 impl FromRequestParts<AppState> for ExtractUser {
@@ -31,7 +34,7 @@ impl FromRequestParts<AppState> for ExtractUser {
                 )
             })?;
 
-        let mut user = user::find_user_by_key(&state.database.user_collection, api_key)
+        let mut user = find_user_by_key(&state.database.user_collection, api_key)
             .await
             .map_err(|_| {
                 (

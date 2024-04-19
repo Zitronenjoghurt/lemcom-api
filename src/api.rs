@@ -3,13 +3,17 @@ pub mod database {
     pub mod db;
 }
 
+#[path = "./entities"]
+pub mod entities {
+    pub mod friendship;
+    pub mod user;
+}
+
 #[path = "./models"]
 pub mod models {
     pub mod enums;
-    pub mod friendship;
     pub mod query_models;
     pub mod response_models;
-    pub mod user;
     pub mod user_settings;
 }
 
