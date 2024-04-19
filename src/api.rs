@@ -36,5 +36,6 @@ pub mod security {
 pub mod utils {
     pub mod macros;
     pub mod sanitize;
+    pub mod serde_tz;
     pub mod time_operations;
 }

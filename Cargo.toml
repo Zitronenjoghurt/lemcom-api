@@ -6,9 +6,11 @@ edition = "2021"
 [dependencies]
 axum = { version = "0.7.5", features = ["original-uri"] }
 axum-valid = { version = "0.18.0", features = ["garde", "basic"] }
-chrono = "0.4.37"
+chrono = { version = "0.4.37", features = ["serde"] }
+chrono-tz = "0.9.0"
 dotenvy = "0.15.7"
 futures = "0.3.30"
+lazy_static = "1.4.0"
 mongodb = "2.8.2"
 rustrict = "0.7.24"
 serde = { version = "1.0.197", features = ["derive"] }

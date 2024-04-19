@@ -8,7 +8,9 @@ use crate::api::models::{
     response_models::{FriendInformation, FriendRequests, Pagination},
     user_settings::UserSettings,
 };
+use crate::api::utils::serde_tz;
 use crate::api::utils::time_operations::{nanos_to_date, timestamp_now_nanos};
+use chrono_tz::Tz;
 use futures::{future::try_join_all, TryStreamExt};
 use mongodb::{
     bson::{self, doc},
@@ -36,6 +38,12 @@ pub struct User {
     pub friend_requests: HashMap<String, u64>,
     #[serde(default)]
     pub profile: UserProfile,
+    #[serde(default = "default_tz", with = "serde_tz")]
+    pub timezone: Tz,
+}
+
+fn default_tz() -> Tz {
+    "UTC".parse().unwrap()
 }
 
 impl User {
@@ -64,8 +72,8 @@ impl User {
         UserPrivateInformation {
             name: self.name.clone(),
             display_name: self.display_name.clone(),
-            joined_date: nanos_to_date(self.created_stamp),
-            last_online_date: nanos_to_date(self.last_access_stamp),
+            joined_date: nanos_to_date(self.created_stamp, &self.timezone),
+            last_online_date: nanos_to_date(self.last_access_stamp, &self.timezone),
             total_request_count: self.request_count(),
             permission_level: self.permission_level.clone(),
             profile: self.profile.clone(),
@@ -78,12 +86,12 @@ impl User {
         include_profile: bool,
     ) -> UserPublicInformation {
         let joined_date = if self.settings.show_join_date.is_visible(is_friend) {
-            Some(nanos_to_date(self.created_stamp))
+            Some(nanos_to_date(self.created_stamp, &self.timezone))
         } else {
             None
         };
         let last_online_date = if self.settings.show_online_date.is_visible(is_friend) {
-            Some(nanos_to_date(self.last_access_stamp))
+            Some(nanos_to_date(self.last_access_stamp, &self.timezone))
         } else {
             None
         };
@@ -157,7 +165,7 @@ impl User {
             .filter_map(|(user_option, timestamp)| {
                 user_option.map(|user| FriendInformation {
                     user: user.public_information(true, include_profile),
-                    since_date: nanos_to_date(*timestamp),
+                    since_date: nanos_to_date(*timestamp, &self.timezone),
                 })
             })
             .collect::<Vec<_>>();
@@ -207,7 +215,7 @@ impl User {
             .filter_map(|(user_option, timestamp)| {
                 user_option.map(|user| FriendRequestInformation {
                     user: user.public_information(false, include_profile),
-                    sent_date: nanos_to_date(timestamp),
+                    sent_date: nanos_to_date(timestamp, &self.timezone),
                 })
             })
             .collect::<Vec<_>>();
