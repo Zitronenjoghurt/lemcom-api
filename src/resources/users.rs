@@ -11,7 +11,7 @@ use axum::response::{IntoResponse, Response};
 use axum::{routing::get, Json, Router};
 
 /// Retrieve public users.
-///
+// region: get_users
 /// This endpoint returns a list of users which are publicly visible.
 /// To be publicly visible, users have to set profile_public to true.
 #[utoipa::path(
@@ -66,6 +66,7 @@ async fn get_users(
     };
     Json(user_list).into_response()
 }
+// endregion: get_users
 
 pub fn router() -> Router<AppState> {
     Router::<AppState>::new().route("/users", get(get_users))

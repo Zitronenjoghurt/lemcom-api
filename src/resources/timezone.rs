@@ -9,7 +9,7 @@ use axum::routing::put;
 use axum::{routing::get, Json, Router};
 
 /// Get all available timezones.
-///
+// region: get_timezone
 /// This endpoint returns all available timezones.
 #[utoipa::path(
     get,
@@ -26,9 +26,10 @@ use axum::{routing::get, Json, Router};
 async fn get_timezone(ExtractUser(_): ExtractUser) -> Json<Vec<String>> {
     Json(get_timezone_names())
 }
+// endregion: get_timezone
 
 /// Customize your timezone.
-///
+// region: put_timezone
 /// This endpoint returns all available timezones.
 #[utoipa::path(
     put,
@@ -64,6 +65,7 @@ async fn put_timezone(
 
     Json((StatusCode::OK, "Timezone updated")).into_response()
 }
+// endregion: put_timezone
 
 pub fn router() -> Router<AppState> {
     Router::<AppState>::new()

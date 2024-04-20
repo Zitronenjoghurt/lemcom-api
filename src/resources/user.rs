@@ -12,7 +12,7 @@ use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::ge
 use axum_valid::Valid;
 
 /// Retrieve own user information.
-///
+// region: get_user
 /// This endpoint returns your private user information.
 #[utoipa::path(
     get,
@@ -29,9 +29,10 @@ use axum_valid::Valid;
 async fn get_user(ExtractUser(user): ExtractUser) -> Json<UserPrivateInformation> {
     Json(user.private_information())
 }
+// endregion: get_user
 
 /// Retrieve public user information.
-///
+// region: get_user_search
 /// This endpoint returns the user information of the specified username, should they exist.
 #[utoipa::path(
     get,
@@ -82,9 +83,10 @@ async fn get_user_search(
     ))
     .into_response()
 }
+// endregion: get_user_search
 
 /// Retrieve own user settings.
-///
+// region: get_user_settings
 /// This endpoint returns your user settings.
 #[utoipa::path(
     get,
@@ -101,9 +103,10 @@ async fn get_user_search(
 async fn get_user_settings(ExtractUser(user): ExtractUser) -> Json<UserSettings> {
     Json(user.settings)
 }
+// endregion: get_user_search
 
 /// Edit own user settings.
-///
+// region: patch_user_settings
 /// This endpoint allows you to edit your own user settings.
 #[utoipa::path(
     patch,
@@ -131,9 +134,10 @@ async fn patch_user_settings(
     );
     Json(user.settings).into_response()
 }
+// endregion: patch_user_settings
 
 /// Edit own user profile.
-///
+// region: patch_user_profile
 /// This endpoint allows you to edit your own user profile.
 #[utoipa::path(
     patch,
@@ -162,6 +166,7 @@ async fn patch_user_profile(
     );
     Json(user.profile).into_response()
 }
+// endregion: patch_user_profile
 
 pub fn router() -> Router<AppState> {
     Router::<AppState>::new()

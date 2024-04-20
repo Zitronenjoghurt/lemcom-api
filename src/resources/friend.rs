@@ -13,7 +13,7 @@ use axum::routing::{delete, post};
 use axum::{routing::get, Json, Router};
 
 /// Retrieve your current friends.
-///
+// region: get_friend
 /// This endpoint returns a list of users that have sent you friend requests.
 #[utoipa::path(
     get,
@@ -52,9 +52,10 @@ async fn get_friend(
 
     Json(friend_list).into_response()
 }
+// endregion: get_friend
 
 /// Remove a friend.
-///
+// region: delete_friend
 /// This endpoint allows the user to remove a friend..
 #[utoipa::path(
     delete,
@@ -107,9 +108,10 @@ async fn delete_friend(
 
     Json((StatusCode::OK, "Friend successfully removed")).into_response()
 }
+// endregion: delete_friend
 
 /// Retrieve pending friend requests.
-///
+// region: get_friend_request
 /// This endpoint returns a list of users that have sent you friend requests.
 #[utoipa::path(
     get,
@@ -146,9 +148,10 @@ async fn get_friend_request(
     );
     Json(requests).into_response()
 }
+// endregion: get_friend_request
 
 /// Send friend requests.
-///
+// region: post_friend_request
 /// This endpoint allows you to send a friend request to users.
 #[utoipa::path(
     post,
@@ -231,9 +234,10 @@ async fn post_friend_request(
 
     Json((StatusCode::OK, "Friend request sent")).into_response()
 }
+// endregion: post_friend_request
 
 /// Retract friend requests.
-///
+// region: delete_friend_request
 /// This endpoint allows you to retract a friend request.
 #[utoipa::path(
     delete,
@@ -281,9 +285,10 @@ async fn delete_friend_request(
 
     Json((StatusCode::OK, "Friend request retracted")).into_response()
 }
+// endregion: delete_friend_request
 
 /// Accept a pending friend request.
-///
+// region: post_friend_request_accept
 /// This endpoint allows you to accept friend requests.
 #[utoipa::path(
     post,
@@ -355,9 +360,10 @@ async fn post_friend_request_accept(
 
     (StatusCode::OK, "Friend request accepted").into_response()
 }
+// endregion: post_friend_request_accept
 
 /// Deny a pending friend request.
-///
+// region: post_friend_request_deny
 /// This endpoint allows you to deny friend requests.
 #[utoipa::path(
     post,
@@ -404,6 +410,7 @@ async fn post_friend_request_deny(
 
     (StatusCode::OK, "Friend request denied").into_response()
 }
+// endregion: post_friend_request_deny
 
 pub fn router() -> Router<AppState> {
     Router::<AppState>::new()
