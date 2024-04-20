@@ -1,3 +1,4 @@
+use crate::api::utils::time_operations::get_timezone_with_default;
 use chrono_tz::Tz;
 use serde::{self, Deserialize, Deserializer, Serializer};
 
@@ -13,5 +14,6 @@ where
     D: Deserializer<'de>,
 {
     let s = String::deserialize(deserializer)?;
-    s.parse::<Tz>().map_err(serde::de::Error::custom)
+    let tz_ref = get_timezone_with_default(&s);
+    Ok(*tz_ref)
 }

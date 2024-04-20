@@ -24,6 +24,7 @@ async fn main() -> io::Result<()> {
         .nest("/", resources::friend::router())
         .nest("/", resources::metrics::router())
         .nest("/", resources::ping::router())
+        .nest("/", resources::timezone::router())
         .nest("/", resources::user::router())
         .nest("/", resources::users::router())
         .merge(SwaggerUi::new("/swagger").url("/api-docs/openapi.json", docs::ApiDoc::openapi()))

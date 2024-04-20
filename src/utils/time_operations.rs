@@ -1,12 +1,22 @@
 use chrono::{offset::LocalResult, TimeZone};
 use chrono_tz::{Tz, TZ_VARIANTS};
 use lazy_static::lazy_static;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    collections::HashMap,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 lazy_static! {
     static ref TIMEZONES: Vec<String> = TZ_VARIANTS
         .iter()
         .map(|&tz| tz.to_string().to_lowercase())
+        .collect();
+}
+
+lazy_static! {
+    static ref TIMEZONE_MAP: HashMap<String, Tz> = TZ_VARIANTS
+        .iter()
+        .map(|&tz| (tz.to_string().to_lowercase(), tz))
         .collect();
 }
 
@@ -24,5 +34,22 @@ pub fn nanos_to_date(nanos: u64, tz: &Tz) -> String {
     match tz.timestamp_opt(seconds, nanos_remaining) {
         LocalResult::Single(datetime) => datetime.format("%Y-%m-%d %H:%M:%S.%f %Z").to_string(),
         _ => "Invalid timestamp".to_string(),
+    }
+}
+
+pub fn get_timezone_names() -> Vec<String> {
+    TIMEZONES.clone()
+}
+
+pub fn get_timezone_from_name(name: &str) -> Option<&Tz> {
+    let name = name.to_lowercase();
+    TIMEZONE_MAP.get(&name)
+}
+
+pub fn get_timezone_with_default(name: &str) -> &Tz {
+    let timezone = get_timezone_from_name(name);
+    match timezone {
+        Some(tz) => tz,
+        None => &chrono_tz::UTC,
     }
 }

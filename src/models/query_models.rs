@@ -54,8 +54,8 @@ impl PaginationQuery {
 #[derive(Deserialize, IntoParams)]
 #[into_params(parameter_in = Query)]
 pub struct UserSettingsEdit {
-    /// If other people should be able to find you without knowing your name, public means you may appear on public user lists
-    pub show_profile: Option<PrivacyLevel>,
+    /// If other people should be able to find you on the public user lists
+    pub appear_on_public_list: Option<bool>,
     /// If other people should be able to see when you joined the network
     pub show_join_date: Option<PrivacyLevel>,
     /// If other people should be able to see when you were last online
@@ -64,6 +64,8 @@ pub struct UserSettingsEdit {
     pub show_in_search: Option<PrivacyLevel>,
     /// If other people should be able to send you friend requests using your username
     pub allow_friend_requests: Option<bool>,
+    /// If other people should be able to see your timezone
+    pub show_timezone: Option<PrivacyLevel>,
 }
 
 #[derive(Deserialize, IntoParams, Validate)]
@@ -104,4 +106,11 @@ impl UserProfileEdit {
                 .map(|mood| sanitize::profanity(&sanitize::limit_string(mood, 32))),
         }
     }
+}
+
+#[derive(Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
+pub struct TimezoneQuery {
+    /// The timezone you want to use, not to be case-sensitive. Look up available timezones at GET /timezone.
+    pub timezone: String,
 }

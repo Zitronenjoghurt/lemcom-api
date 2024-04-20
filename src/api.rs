@@ -23,6 +23,7 @@ pub mod resources {
     pub mod friend;
     pub mod metrics;
     pub mod ping;
+    pub mod timezone;
     pub mod user;
     pub mod users;
 }

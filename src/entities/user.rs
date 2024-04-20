@@ -77,6 +77,7 @@ impl User {
             total_request_count: self.request_count(),
             permission_level: self.permission_level.clone(),
             profile: self.profile.clone(),
+            timezone: self.timezone.to_string(),
         }
     }
 
@@ -90,11 +91,19 @@ impl User {
         } else {
             None
         };
+
         let last_online_date = if self.settings.show_online_date.is_visible(is_friend) {
             Some(nanos_to_date(self.last_access_stamp, &self.timezone))
         } else {
             None
         };
+
+        let timezone = if self.settings.show_timezone.is_visible(is_friend) {
+            Some(self.timezone.to_string())
+        } else {
+            None
+        };
+
         let profile = if include_profile {
             Some(self.profile.clone())
         } else {
@@ -108,6 +117,7 @@ impl User {
             last_online_date,
             permission_level: self.permission_level.clone(),
             profile,
+            timezone,
         }
     }
 
@@ -274,7 +284,7 @@ pub async fn get_public_users(
         .limit(page_size as i64)
         .build();
 
-    let filter = doc! { "settings.show_profile": "Public" };
+    let filter = doc! { "settings.appear_on_public_list": true };
     let mut cursor = collection.find(filter.clone(), find_options).await?;
 
     let mut users = Vec::new();

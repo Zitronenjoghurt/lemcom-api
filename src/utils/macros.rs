@@ -26,9 +26,7 @@ macro_rules! unpack_option {
     ($option:expr, $status_code:expr, $status_message:expr) => {
         match $option {
             Some(value) => value,
-            None => {
-                return Json(($status_code, $status_message)).into_response(),
-            }
+            None => return Json(($status_code, $status_message)).into_response(),
         }
     };
 }

@@ -15,6 +15,8 @@ use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response
         api::resources::friend::post_friend_request_accept,
         api::resources::metrics::get_metrics_usage,
         api::resources::ping::get_ping,  
+        api::resources::timezone::get_timezone,
+        api::resources::timezone::put_timezone,
         api::resources::user::get_user,
         api::resources::user::get_user_search,
         api::resources::user::get_user_settings,

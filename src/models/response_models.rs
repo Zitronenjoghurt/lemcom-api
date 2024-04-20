@@ -25,6 +25,8 @@ pub struct UserPrivateInformation {
     pub permission_level: PermissionLevel,
     /// Your profile
     pub profile: UserProfile,
+    /// Your timezone
+    pub timezone: String,
 }
 
 /// Public user information accessible by everyone
@@ -42,6 +44,8 @@ pub struct UserPublicInformation {
     pub permission_level: PermissionLevel,
     /// The profile of the user, not included if not stated in the query
     pub profile: Option<UserProfile>,
+    /// The timezone of the user
+    pub timezone: Option<String>,
 }
 
 /// Pagination information for the request results
