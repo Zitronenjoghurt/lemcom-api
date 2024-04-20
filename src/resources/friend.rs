@@ -232,7 +232,57 @@ async fn post_friend_request(
     Json((StatusCode::OK, "Friend request sent")).into_response()
 }
 
-/// Accept a pending friend requests.
+/// Retract friend requests.
+///
+/// This endpoint allows you to retract a friend request.
+#[utoipa::path(
+    delete,
+    path = "/friend/request",
+    params(UserName),
+    responses(
+        (status = 200, description = "Friend request was retracted"),
+        (status = 400, description = "You did not send a request to the user"),
+        (status = 401, description = "Invalid API Key"),
+        (status = 404, description = "User not found"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    tag = "Friends"
+)]
+async fn delete_friend_request(
+    ExtractUser(user): ExtractUser,
+    State(state): State<AppState>,
+    query: Query<UserName>,
+) -> Response {
+    let query = query.sanitize();
+
+    let mut target = unpack_result_option!(
+        find_user_by_name(&state.database.user_collection, &query.name).await,
+        StatusCode::NOT_FOUND,
+        "User not found",
+        "An error occurred while fetching user"
+    );
+
+    if !target.friend_requests.contains_key(&user.key) {
+        return Json((
+            StatusCode::BAD_REQUEST,
+            "You did not send a request to the user",
+        ))
+        .into_response();
+    }
+
+    target.friend_requests.remove(&user.key);
+
+    unpack_result!(
+        target.save(&state.database.user_collection).await,
+        "An error occured while saving the target user"
+    );
+
+    Json((StatusCode::OK, "Friend request retracted")).into_response()
+}
+
+/// Accept a pending friend request.
 ///
 /// This endpoint allows you to accept friend requests.
 #[utoipa::path(
@@ -306,11 +356,62 @@ async fn post_friend_request_accept(
     (StatusCode::OK, "Friend request accepted").into_response()
 }
 
+/// Deny a pending friend request.
+///
+/// This endpoint allows you to deny friend requests.
+#[utoipa::path(
+    post,
+    path = "/friend/request/deny",
+    params(UserName),
+    responses(
+        (status = 200, description = "Friend request denied"),
+        (status = 401, description = "Unable to deny request"),
+        (status = 401, description = "Invalid API Key"),
+        (status = 404, description = "User not found or no pending request from user"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    tag = "Friends"
+)]
+async fn post_friend_request_deny(
+    ExtractUser(mut user): ExtractUser,
+    State(state): State<AppState>,
+    query: Query<UserName>,
+) -> Response {
+    let query = query.sanitize();
+
+    let target = unpack_result_option!(
+        find_user_by_name(&state.database.user_collection, &query.name).await,
+        StatusCode::NOT_FOUND,
+        "User not found or no pending request from user",
+        "An error occurred while fetching user"
+    );
+
+    if !user.friend_requests.contains_key(&target.key) {
+        return (
+            StatusCode::NOT_FOUND,
+            "User not found or no pending request from user",
+        )
+            .into_response();
+    };
+
+    user.friend_requests.remove(&target.key);
+    unpack_result!(
+        user.save(&state.database.user_collection).await,
+        "An error occured while saving the user"
+    );
+
+    (StatusCode::OK, "Friend request denied").into_response()
+}
+
 pub fn router() -> Router<AppState> {
     Router::<AppState>::new()
         .route("/friend", get(get_friend))
         .route("/friend", delete(delete_friend))
         .route("/friend/request", get(get_friend_request))
         .route("/friend/request", post(post_friend_request))
+        .route("/friend/request", delete(delete_friend_request))
         .route("/friend/request/accept", post(post_friend_request_accept))
+        .route("/friend/request/deny", post(post_friend_request_deny))
 }

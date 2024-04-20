@@ -10,9 +10,11 @@ use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response
     paths(
         api::resources::friend::get_friend,
         api::resources::friend::delete_friend,
+        api::resources::friend::delete_friend_request,
         api::resources::friend::get_friend_request,
         api::resources::friend::post_friend_request,
         api::resources::friend::post_friend_request_accept,
+        api::resources::friend::post_friend_request_deny,
         api::resources::metrics::get_metrics_usage,
         api::resources::ping::get_ping,  
         api::resources::timezone::get_timezone,
