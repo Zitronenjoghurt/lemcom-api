@@ -27,7 +27,7 @@ use axum::{routing::get, Json, Router};
     tag = "Users"
 )]
 async fn get_users(
-    ExtractUser(_): ExtractUser,
+    ExtractUser(user): ExtractUser,
     State(state): State<AppState>,
     pagination: Query<PaginationQuery>,
     profile_query: Query<IncludeUserProfile>,
@@ -44,7 +44,9 @@ async fn get_users(
 
     let public_information: Vec<UserPublicInformation> = users
         .iter()
-        .map(|target| target.public_information(false, profile_query.include_user_profile))
+        .map(|target| {
+            target.public_information(false, profile_query.include_user_profile, &user.timezone)
+        })
         .collect();
     let user_list = UserList {
         users: public_information,

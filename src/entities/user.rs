@@ -85,15 +85,16 @@ impl User {
         &self,
         is_friend: bool,
         include_profile: bool,
+        timezone: &Tz,
     ) -> UserPublicInformation {
         let joined_date = if self.settings.show_join_date.is_visible(is_friend) {
-            Some(nanos_to_date(self.created_stamp, &self.timezone))
+            Some(nanos_to_date(self.created_stamp, timezone))
         } else {
             None
         };
 
         let last_online_date = if self.settings.show_online_date.is_visible(is_friend) {
-            Some(nanos_to_date(self.last_access_stamp, &self.timezone))
+            Some(nanos_to_date(self.last_access_stamp, timezone))
         } else {
             None
         };
@@ -174,7 +175,7 @@ impl User {
             .zip(friends[start..end].iter().map(|(_, t)| t))
             .filter_map(|(user_option, timestamp)| {
                 user_option.map(|user| FriendInformation {
-                    user: user.public_information(true, include_profile),
+                    user: user.public_information(true, include_profile, &self.timezone),
                     since_date: nanos_to_date(*timestamp, &self.timezone),
                 })
             })
@@ -224,7 +225,7 @@ impl User {
             .zip(requests[start..end].iter().map(|(_, &t)| t))
             .filter_map(|(user_option, timestamp)| {
                 user_option.map(|user| FriendRequestInformation {
-                    user: user.public_information(false, include_profile),
+                    user: user.public_information(false, include_profile, &self.timezone),
                     sent_date: nanos_to_date(timestamp, &self.timezone),
                 })
             })

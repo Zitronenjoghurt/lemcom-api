@@ -75,7 +75,12 @@ async fn get_user_search(
         return (StatusCode::NOT_FOUND, "User not found").into_response();
     };
 
-    Json(target.public_information(is_friend, profile_query.include_user_profile)).into_response()
+    Json(target.public_information(
+        is_friend,
+        profile_query.include_user_profile,
+        &user.timezone,
+    ))
+    .into_response()
 }
 
 /// Retrieve own user settings.
