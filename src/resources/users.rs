@@ -1,3 +1,4 @@
+use crate::api::entities::friendship::are_friends;
 use crate::api::entities::user::get_public_users;
 use crate::api::models::query_models::IncludeUserProfile;
 use crate::api::models::response_models::UserPublicInformation;
@@ -42,12 +43,23 @@ async fn get_users(
         "An error occured while fetching users"
     );
 
-    let public_information: Vec<UserPublicInformation> = users
-        .iter()
-        .map(|target| {
-            target.public_information(false, profile_query.include_user_profile, &user.timezone)
-        })
-        .collect();
+    let mut public_information: Vec<UserPublicInformation> = Vec::new();
+    for target in users.iter() {
+        let is_friend = unpack_result!(
+            are_friends(
+                &state.database.friendship_collection,
+                vec![user.key.clone(), target.key.clone()]
+            )
+            .await,
+            "An error occured while fetching friendship"
+        );
+        public_information.push(target.public_information(
+            is_friend,
+            profile_query.include_user_profile,
+            &user.timezone,
+        ));
+    }
+
     let user_list = UserList {
         users: public_information,
         pagination,
