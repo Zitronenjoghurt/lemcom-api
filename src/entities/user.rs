@@ -67,6 +67,16 @@ impl User {
             .or_insert(0) += 1;
     }
 
+    pub fn block_user(&mut self, key: &str) -> Result<(), &'static str> {
+        if self.block_list.contains_key(key) {
+            Err("User already blocked")
+        } else {
+            self.block_list
+                .insert(key.to_string(), timestamp_now_nanos());
+            Ok(())
+        }
+    }
+
     pub fn request_count(&self) -> u64 {
         self.endpoint_usage.values().sum()
     }

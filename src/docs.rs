@@ -20,6 +20,7 @@ use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response
         api::resources::timezone::get_timezone,
         api::resources::timezone::put_timezone,
         api::resources::user::get_user,
+        api::resources::user::post_user_block,
         api::resources::user::get_user_block,
         api::resources::user::get_user_search,
         api::resources::user::get_user_settings,

@@ -9,7 +9,7 @@ use crate::api::security::authentication::ExtractUser;
 use crate::{unpack_result, unpack_result_option, AppState};
 use axum::extract::State;
 use axum::response::Response;
-use axum::routing::patch;
+use axum::routing::{patch, post};
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use axum_valid::Valid;
 
@@ -211,6 +211,74 @@ async fn get_user_block(
 }
 // endregion: get_user_block
 
+/// Block a user.
+// region: post_user_block
+/// This endpoint allows you to block users.
+#[utoipa::path(
+    post,
+    path = "/user/block",
+    params(UserName),
+    responses(
+        (status = 200, description = "Successfully blocked user"),
+        (status = 400, description = "Unable to block user"),
+        (status = 401, description = "Invalid API Key"),
+        (status = 404, description = "User not found"),
+        (status = 500, description = "Server error"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    tag = "User"
+)]
+async fn post_user_block(
+    ExtractUser(mut user): ExtractUser,
+    State(state): State<AppState>,
+    query: Query<UserName>,
+) -> Response {
+    let query = query.sanitize();
+
+    let target = unpack_result_option!(
+        find_user_by_name(&state.database.user_collection, &query.name).await,
+        StatusCode::NOT_FOUND,
+        "User not found",
+        "An error occured while fetching user"
+    );
+
+    if target.key == user.key {
+        return (StatusCode::BAD_REQUEST, "You can't block yourself").into_response();
+    };
+
+    let is_friend = unpack_result!(
+        are_friends(
+            &state.database.friendship_collection,
+            vec![user.key.clone(), target.key.clone()]
+        )
+        .await,
+        "An error occured while fetching friendship"
+    );
+
+    if is_friend {
+        return (
+            StatusCode::BAD_REQUEST,
+            "Can't block your friends, remove them first",
+        )
+            .into_response();
+    };
+
+    let result = user.block_user(&target.key);
+    match result {
+        Ok(_) => {
+            unpack_result!(
+                user.save(&state.database.user_collection).await,
+                "An error occured while saving user"
+            );
+            (StatusCode::OK, "Successsfully blocked user").into_response()
+        }
+        Err(_) => (StatusCode::BAD_REQUEST, "User is already blocked").into_response(),
+    }
+}
+// endregion: post_user_block
+
 pub fn router() -> Router<AppState> {
     Router::<AppState>::new()
         .route("/user", get(get_user))
@@ -219,4 +287,5 @@ pub fn router() -> Router<AppState> {
         .route("/user/settings", patch(patch_user_settings))
         .route("/user/profile", patch(patch_user_profile))
         .route("/user/block", get(get_user_block))
+        .route("/user/block", post(post_user_block))
 }
