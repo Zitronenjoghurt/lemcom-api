@@ -22,6 +22,7 @@ use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response
         api::resources::user::get_user,
         api::resources::user::post_user_block,
         api::resources::user::get_user_block,
+        api::resources::user::delete_user_block,
         api::resources::user::get_user_search,
         api::resources::user::get_user_settings,
         api::resources::user::patch_user_profile,

@@ -9,7 +9,7 @@ use crate::api::security::authentication::ExtractUser;
 use crate::{unpack_result, unpack_result_option, AppState};
 use axum::extract::State;
 use axum::response::Response;
-use axum::routing::{patch, post};
+use axum::routing::{delete, patch, post};
 use axum::{extract::Query, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
 use axum_valid::Valid;
 
@@ -283,6 +283,53 @@ async fn post_user_block(
 }
 // endregion: post_user_block
 
+/// Unblock a user.
+// region: delete_user_block
+/// This endpoint allows you to unblock users.
+#[utoipa::path(
+    delete,
+    path = "/user/block",
+    params(UserName),
+    responses(
+        (status = 200, description = "Successfully unblocked user"),
+        (status = 400, description = "Unable to unblock user"),
+        (status = 401, description = "Invalid API Key"),
+        (status = 404, description = "User not found"),
+        (status = 500, description = "Server error"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    tag = "User"
+)]
+async fn delete_user_block(
+    ExtractUser(mut user): ExtractUser,
+    State(state): State<AppState>,
+    query: Query<UserName>,
+) -> Response {
+    let query = query.sanitize();
+
+    let target = unpack_result_option!(
+        find_user_by_name(&state.database.user_collection, &query.name).await,
+        StatusCode::NOT_FOUND,
+        "User not found",
+        "An error occured while fetching user"
+    );
+
+    if !user.block_list.contains_key(&target.key) {
+        return (StatusCode::BAD_REQUEST, "User is not on your block list").into_response();
+    };
+
+    user.block_list.remove(&target.key);
+    unpack_result!(
+        user.save(&state.database.user_collection).await,
+        "An error occured while saving user"
+    );
+
+    (StatusCode::OK, "Successsfully unblocked user").into_response()
+}
+// endregion: delete_user_block
+
 pub fn router() -> Router<AppState> {
     Router::<AppState>::new()
         .route("/user", get(get_user))
@@ -292,4 +339,5 @@ pub fn router() -> Router<AppState> {
         .route("/user/profile", patch(patch_user_profile))
         .route("/user/block", get(get_user_block))
         .route("/user/block", post(post_user_block))
+        .route("/user/block", delete(delete_user_block))
 }
