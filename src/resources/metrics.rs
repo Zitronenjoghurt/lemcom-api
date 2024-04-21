@@ -12,6 +12,7 @@ use std::collections::HashMap;
     responses(
         (status = 200, description = "Endpoint usage data", body = HashMap<String, u64>),
         (status = 401, description = "Invalid API Key"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])

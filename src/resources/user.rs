@@ -1,6 +1,8 @@
 use crate::api::entities::friendship::are_friends;
 use crate::api::entities::user::find_user_by_name;
-use crate::api::models::query_models::{IncludeUserProfile, UserProfileEdit, UserSettingsEdit};
+use crate::api::models::query_models::{
+    IncludeUserProfile, PaginationQuery, UserProfileEdit, UserSettingsEdit,
+};
 use crate::api::models::user_settings::UserSettings;
 use crate::api::models::{query_models::UserName, response_models::UserPrivateInformation};
 use crate::api::security::authentication::ExtractUser;
@@ -20,6 +22,7 @@ use axum_valid::Valid;
     responses(
         (status = 200, description = "Personal private user information", body = UserPrivateInformation),
         (status = 401, description = "Invalid API Key"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])
@@ -42,6 +45,7 @@ async fn get_user(ExtractUser(user): ExtractUser) -> Json<UserPrivateInformation
         (status = 200, description = "Personal private user information", body = UserPrivateInformation),
         (status = 401, description = "Invalid API Key"),
         (status = 404, description = "User does not exist"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])
@@ -94,6 +98,7 @@ async fn get_user_search(
     responses(
         (status = 200, description = "Your user settings", body = UserSettings),
         (status = 401, description = "Invalid API Key"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])
@@ -115,6 +120,7 @@ async fn get_user_settings(ExtractUser(user): ExtractUser) -> Json<UserSettings>
     responses(
         (status = 200, description = "Your updated user settings", body = UserSettings),
         (status = 401, description = "Invalid API Key"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])
@@ -146,6 +152,7 @@ async fn patch_user_settings(
     responses(
         (status = 200, description = "Your updated user profile", body = UserProfile),
         (status = 401, description = "Invalid API Key"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])
@@ -168,6 +175,42 @@ async fn patch_user_profile(
 }
 // endregion: patch_user_profile
 
+/// Retrieve users on your block list.
+// region: get_user_block
+/// This endpoint returns a list of usernames that are on your blocklist.
+#[utoipa::path(
+    get,
+    path = "/user/block",
+    params(PaginationQuery),
+    responses(
+        (status = 200, description = "Your block list", body = BlockList),
+        (status = 401, description = "Invalid API Key"),
+        (status = 500, description = "Server error"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    tag = "User"
+)]
+async fn get_user_block(
+    ExtractUser(user): ExtractUser,
+    State(state): State<AppState>,
+    query: Query<PaginationQuery>,
+) -> Response {
+    let query = query.sanitize();
+    let page = query.page.unwrap_or(1);
+    let page_size = query.page_size.unwrap_or(10);
+
+    let block_list = unpack_result!(
+        user.block_list_with_pagination(&state.database.user_collection, page, page_size)
+            .await,
+        "An error occured while fetching users"
+    );
+
+    Json(block_list).into_response()
+}
+// endregion: get_user_block
+
 pub fn router() -> Router<AppState> {
     Router::<AppState>::new()
         .route("/user", get(get_user))
@@ -175,4 +218,5 @@ pub fn router() -> Router<AppState> {
         .route("/user/settings", get(get_user_settings))
         .route("/user/settings", patch(patch_user_settings))
         .route("/user/profile", patch(patch_user_profile))
+        .route("/user/block", get(get_user_block))
 }

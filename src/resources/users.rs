@@ -21,6 +21,7 @@ use axum::{routing::get, Json, Router};
     responses(
         (status = 200, description = "Publicly visible users", body = UserList),
         (status = 401, description = "Invalid API Key"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])

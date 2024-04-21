@@ -17,6 +17,7 @@ use axum::{routing::get, Json, Router};
     responses(
         (status = 200, description = "All available timezones", body = Vec<String>),
         (status = 401, description = "Invalid API Key"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])
@@ -39,6 +40,7 @@ async fn get_timezone(ExtractUser(_): ExtractUser) -> Json<Vec<String>> {
         (status = 200, description = "Timezone updated"),
         (status = 401, description = "Invalid API Key"),
         (status = 404, description = "Timezone not found"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])

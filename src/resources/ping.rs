@@ -11,6 +11,7 @@ use axum::{routing::get, Json, Router};
     responses(
         (status = 200, description = "Pong", body = MessageResponse),
         (status = 401, description = "Invalid API Key"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])

@@ -1,5 +1,5 @@
 use utoipa::{openapi::security::{ApiKey, ApiKeyValue, SecurityScheme}, Modify, OpenApi};
-use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response_models::{FriendInformation, FriendList, FriendRequestInformation, FriendRequests, MessageResponse, Pagination, UserList, UserPrivateInformation, UserPublicInformation}, user_profile::UserProfile, user_settings::UserSettings}};
+use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response_models::{BlockList, BlockListEntry, FriendInformation, FriendList, FriendRequestInformation, FriendRequests, MessageResponse, Pagination, UserList, UserPrivateInformation, UserPublicInformation}, user_profile::UserProfile, user_settings::UserSettings}};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -20,6 +20,7 @@ use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response
         api::resources::timezone::get_timezone,
         api::resources::timezone::put_timezone,
         api::resources::user::get_user,
+        api::resources::user::get_user_block,
         api::resources::user::get_user_search,
         api::resources::user::get_user_settings,
         api::resources::user::patch_user_profile,
@@ -34,7 +35,7 @@ use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response
     ),
     modifiers(&SecurityAddon),
     components(
-        schemas(MessageResponse, UserPublicInformation, UserPrivateInformation, UserSettings, UserList, Pagination, PrivacyLevel, PermissionLevel, FriendRequestInformation, FriendRequests, FriendInformation, FriendList, UserProfile),
+        schemas(MessageResponse, UserPublicInformation, UserPrivateInformation, UserSettings, UserList, Pagination, PrivacyLevel, PermissionLevel, FriendRequestInformation, FriendRequests, FriendInformation, FriendList, UserProfile, BlockList, BlockListEntry),
     )
 )]
 pub struct ApiDoc;

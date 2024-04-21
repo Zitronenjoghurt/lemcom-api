@@ -22,6 +22,7 @@ use axum::{routing::get, Json, Router};
     responses(
         (status = 200, description = "Your friends", body = FriendList),
         (status = 401, description = "Invalid API Key"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])
@@ -66,6 +67,7 @@ async fn get_friend(
         (status = 400, description = "Unable to remove friend"),
         (status = 401, description = "Invalid API Key"),
         (status = 404, description = "User not found"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])
@@ -120,6 +122,7 @@ async fn delete_friend(
     responses(
         (status = 200, description = "Users you have pending friend requests from", body = FriendRequests),
         (status = 401, description = "Invalid API Key"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])
@@ -162,6 +165,7 @@ async fn get_friend_request(
         (status = 400, description = "Unable to send request"),
         (status = 401, description = "Invalid API Key"),
         (status = 404, description = "User not found or user does not allow friend requests"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])
@@ -248,6 +252,7 @@ async fn post_friend_request(
         (status = 400, description = "You did not send a request to the user"),
         (status = 401, description = "Invalid API Key"),
         (status = 404, description = "User not found"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])
@@ -299,6 +304,7 @@ async fn delete_friend_request(
         (status = 401, description = "Unable to accept request"),
         (status = 401, description = "Invalid API Key"),
         (status = 404, description = "User not found or no pending request from user"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])
@@ -374,6 +380,7 @@ async fn post_friend_request_accept(
         (status = 401, description = "Unable to deny request"),
         (status = 401, description = "Invalid API Key"),
         (status = 404, description = "User not found or no pending request from user"),
+        (status = 500, description = "Server error"),
     ),
     security(
         ("api_key" = [])

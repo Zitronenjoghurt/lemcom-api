@@ -122,3 +122,20 @@ pub struct FriendList {
     pub friends: Vec<FriendInformation>,
     pub pagination: Pagination,
 }
+
+/// An entry on your block list
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct BlockListEntry {
+    /// The username of the blocked user
+    pub name: String,
+    /// The date and time you blocked this user
+    pub since_date: String,
+}
+
+/// Your list of blocked users
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct BlockList {
+    /// Entries on your block list including the name of the user and the time they were blocked
+    pub entries: Vec<BlockListEntry>,
+    pub pagination: Pagination,
+}

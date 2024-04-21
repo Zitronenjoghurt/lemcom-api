@@ -1,6 +1,7 @@
 use crate::api::entities::friendship::{find_friendships_by_key, Friendship};
 use crate::api::models::response_models::{
-    FriendList, FriendRequestInformation, UserPrivateInformation, UserPublicInformation,
+    BlockList, BlockListEntry, FriendList, FriendRequestInformation, UserPrivateInformation,
+    UserPublicInformation,
 };
 use crate::api::models::user_profile::UserProfile;
 use crate::api::models::{
@@ -40,6 +41,8 @@ pub struct User {
     pub profile: UserProfile,
     #[serde(default = "default_tz", with = "serde_tz")]
     pub timezone: Tz,
+    #[serde(default)]
+    pub block_list: HashMap<String, u64>,
 }
 
 fn default_tz() -> Tz {
@@ -240,6 +243,55 @@ impl User {
 
         Ok(FriendRequests {
             requests: request_information,
+            pagination,
+        })
+    }
+
+    pub async fn block_list_with_pagination(
+        &self,
+        collection: &Collection<User>,
+        page: u32,
+        page_size: u32,
+    ) -> mongodb::error::Result<BlockList> {
+        let entries: Vec<(&String, &u64)> = self.block_list.iter().collect();
+        let entry_count = self.block_list.len();
+
+        let start = ((page - 1) * page_size) as usize;
+        if start >= entry_count {
+            return Ok(BlockList {
+                entries: vec![],
+                pagination: Pagination::new(entry_count as u32, page, page_size, 0),
+            });
+        }
+        let end = std::cmp::min(start + page_size as usize, entry_count);
+
+        let page_keys: Vec<&str> = entries[start..end]
+            .iter()
+            .map(|(k, _)| k.as_str())
+            .collect();
+
+        let users = find_users_by_keys(collection, page_keys).await?;
+
+        let block_entries = users
+            .into_iter()
+            .zip(entries[start..end].iter().map(|(_, &t)| t))
+            .filter_map(|(user_option, timestamp)| {
+                user_option.map(|user| BlockListEntry {
+                    name: user.name,
+                    since_date: nanos_to_date(timestamp, &self.timezone),
+                })
+            })
+            .collect::<Vec<_>>();
+
+        let pagination = Pagination::new(
+            entry_count as u32,
+            page,
+            page_size,
+            block_entries.len() as u32,
+        );
+
+        Ok(BlockList {
+            entries: block_entries,
             pagination,
         })
     }
