@@ -164,7 +164,7 @@ async fn get_friend_request(
         (status = 200, description = "Friend request was sent"),
         (status = 400, description = "Unable to send request"),
         (status = 401, description = "Invalid API Key"),
-        (status = 404, description = "User not found or user does not allow friend requests"),
+        (status = 404, description = "User not found"),
         (status = 500, description = "Server error"),
     ),
     security(
@@ -182,9 +182,13 @@ async fn post_friend_request(
     let mut target = unpack_result_option!(
         find_user_by_name(&state.database.user_collection, &query.name).await,
         StatusCode::NOT_FOUND,
-        "User not found or user does not allow friend requests",
+        "User not found",
         "An error occurred while fetching user"
     );
+
+    if target.block_list.contains_key(&user.key) || user.block_list.contains_key(&target.key) {
+        return (StatusCode::NOT_FOUND, "User not found").into_response();
+    }
 
     if target.key == user.key {
         return Json((
@@ -196,8 +200,8 @@ async fn post_friend_request(
 
     if !target.settings.allow_friend_requests {
         return Json((
-            StatusCode::NOT_FOUND,
-            "User not found or user does not allow friend requests",
+            StatusCode::BAD_REQUEST,
+            "User does not allow friend requests",
         ))
         .into_response();
     }
@@ -338,6 +342,14 @@ async fn post_friend_request_accept(
         user.save(&state.database.user_collection).await,
         "An error occured while saving the user"
     );
+
+    if target.block_list.contains_key(&user.key) || user.block_list.contains_key(&target.key) {
+        return (
+            StatusCode::NOT_FOUND,
+            "User not found or no pending request from user",
+        )
+            .into_response();
+    };
 
     let already_friends = unpack_result!(
         are_friends(

@@ -67,6 +67,10 @@ async fn get_user_search(
         "An error occured while fetching user"
     );
 
+    if target.block_list.contains_key(&user.key) || user.block_list.contains_key(&target.key) {
+        return (StatusCode::NOT_FOUND, "User not found").into_response();
+    }
+
     let is_friend = unpack_result!(
         are_friends(
             &state.database.friendship_collection,

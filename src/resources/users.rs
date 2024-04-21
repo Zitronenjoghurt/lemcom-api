@@ -40,7 +40,14 @@ async fn get_users(
     let page_size = pagination.page_size.unwrap_or(10);
 
     let (users, pagination) = unpack_result!(
-        get_public_users(&state.database.user_collection, page, page_size).await,
+        get_public_users(
+            &state.database.user_collection,
+            user.block_list.keys().cloned().collect(),
+            &user.key,
+            page,
+            page_size
+        )
+        .await,
         "An error occured while fetching users"
     );
 
