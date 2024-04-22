@@ -16,6 +16,7 @@ use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response
         api::resources::friend::post_friend_request_accept,
         api::resources::friend::post_friend_request_deny,
         api::resources::metrics::get_metrics_usage,
+        api::resources::notification::get_notification,
         api::resources::ping::get_ping,  
         api::resources::timezone::get_timezone,
         api::resources::timezone::put_timezone,
@@ -31,6 +32,7 @@ use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, response
     ),
     tags(
         (name = "Misc", description = "Miscellaneous endpoints"),
+        (name = "Notification", description = "Endpoints for handling your notifications"),
         (name = "User", description = "User management endpoints"),
         (name = "Users", description = "Endpoint for handling multiple users"),
         (name = "Friends", description = "Endpoints for handling friend requests and friendships"),

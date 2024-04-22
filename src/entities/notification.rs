@@ -53,14 +53,14 @@ impl Notification {
             .await
     }
 
-    pub async fn into_response(
-        self,
-        viewer_user: User,
-        database: DB,
+    pub async fn get_response(
+        &self,
+        viewer_user: &User,
+        database: &DB,
     ) -> Result<NotificationResponse, Error> {
         match self {
             Notification::FriendRequestReceived(friend_request) => {
-                friend_request.into_response(viewer_user, database).await
+                friend_request.get_response(viewer_user, database).await
             }
         }
     }
@@ -68,10 +68,10 @@ impl Notification {
 
 #[async_trait]
 pub trait IntoNotificationResponse {
-    async fn into_response(
-        self,
-        viewer_user: User,
-        database: DB,
+    async fn get_response(
+        &self,
+        viewer_user: &User,
+        database: &DB,
     ) -> Result<NotificationResponse, Error>;
 }
 
@@ -120,10 +120,10 @@ impl FriendRequestReceived {
 
 #[async_trait]
 impl IntoNotificationResponse for FriendRequestReceived {
-    async fn into_response(
-        self,
-        viewer_user: User,
-        database: DB,
+    async fn get_response(
+        &self,
+        viewer_user: &User,
+        database: &DB,
     ) -> Result<NotificationResponse, Error> {
         let user = find_user_by_key(&database.user_collection, &self.sender_key).await?;
         let user_information =

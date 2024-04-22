@@ -24,6 +24,7 @@ pub mod models {
 pub mod resources {
     pub mod friend;
     pub mod metrics;
+    pub mod notification;
     pub mod ping;
     pub mod timezone;
     pub mod user;

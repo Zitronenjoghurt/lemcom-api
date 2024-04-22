@@ -23,6 +23,7 @@ async fn main() -> io::Result<()> {
     let app = Router::<AppState>::new()
         .nest("/", resources::friend::router())
         .nest("/", resources::metrics::router())
+        .nest("/", resources::notification::router())
         .nest("/", resources::ping::router())
         .nest("/", resources::timezone::router())
         .nest("/", resources::user::router())
