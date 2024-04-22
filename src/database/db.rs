@@ -1,4 +1,4 @@
-use crate::api::entities::{friendship::Friendship, user::User};
+use crate::api::entities::{friendship::Friendship, notification::Notification, user::User};
 use dotenvy::dotenv;
 use mongodb::{error::Result, options::ClientOptions, Client, Collection};
 use std::env;
@@ -8,6 +8,7 @@ pub struct DB {
     pub client: Client,
     pub user_collection: Collection<User>,
     pub friendship_collection: Collection<Friendship>,
+    pub notification_collection: Collection<Notification>,
 }
 
 pub async fn setup() -> Result<DB> {
@@ -21,5 +22,6 @@ pub async fn setup() -> Result<DB> {
         client,
         user_collection: db.collection("users"),
         friendship_collection: db.collection("friendships"),
+        notification_collection: db.collection("notifications"),
     })
 }

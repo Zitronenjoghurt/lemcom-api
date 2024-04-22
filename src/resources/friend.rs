@@ -1,6 +1,7 @@
 use crate::api::entities::friendship::{
     are_friends, find_friendship_by_keys, remove_friendship_by_id, Friendship,
 };
+use crate::api::entities::notification::Notification;
 use crate::api::entities::user::find_user_by_name;
 use crate::api::models::query_models::{IncludeUserProfile, PaginationQuery, UserName};
 use crate::api::security::authentication::ExtractUser;
@@ -233,11 +234,21 @@ async fn post_friend_request(
 
     target
         .friend_requests
-        .insert(user.key, timestamp_now_nanos());
+        .insert(user.key.clone(), timestamp_now_nanos());
 
     unpack_result!(
         target.save(&state.database.user_collection).await,
         "An error occured while saving the target user"
+    );
+
+    unpack_result!(
+        Notification::friend_request(
+            &state.database.notification_collection,
+            &user.key,
+            &target.key
+        )
+        .await,
+        "An error occured while saving notification"
     );
 
     Json((StatusCode::OK, "Friend request sent")).into_response()

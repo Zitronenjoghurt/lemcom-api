@@ -6,6 +6,7 @@ pub mod database {
 #[path = "./entities"]
 pub mod entities {
     pub mod friendship;
+    pub mod notification;
     pub mod user;
 }
 
