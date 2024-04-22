@@ -118,7 +118,7 @@ impl User {
             None
         };
 
-        let profile = if include_profile {
+        let profile = if include_profile && self.settings.show_profile.is_visible(is_friend) {
             Some(self.profile.clone())
         } else {
             None

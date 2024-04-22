@@ -25,6 +25,9 @@ pub struct UserSettings {
     /// If people can see your timezone
     #[serde(default = "default_private")]
     pub show_timezone: PrivacyLevel,
+    /// If people can see your profile
+    #[serde(default = "default_public")]
+    pub show_profile: PrivacyLevel,
 }
 
 fn default_private() -> PrivacyLevel {
@@ -63,6 +66,9 @@ impl UserSettings {
         if let Some(new_value) = &data.show_timezone {
             self.show_timezone = *new_value;
         }
+        if let Some(new_value) = &data.show_profile {
+            self.show_profile = *new_value;
+        }
     }
 }
 
@@ -75,6 +81,7 @@ impl Default for UserSettings {
             show_in_search: PrivacyLevel::Public,
             allow_friend_requests: true,
             show_timezone: PrivacyLevel::Private,
+            show_profile: PrivacyLevel::Public,
         }
     }
 }

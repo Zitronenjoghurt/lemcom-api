@@ -66,6 +66,8 @@ pub struct UserSettingsEdit {
     pub allow_friend_requests: Option<bool>,
     /// If other people should be able to see your timezone
     pub show_timezone: Option<PrivacyLevel>,
+    /// If other people should be able to see your profile
+    pub show_profile: Option<PrivacyLevel>,
 }
 
 #[derive(Deserialize, IntoParams, Validate)]
