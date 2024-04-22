@@ -1,5 +1,5 @@
 use utoipa::{openapi::security::{ApiKey, ApiKeyValue, SecurityScheme}, Modify, OpenApi};
-use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, notification_models::{FriendRequestNotification, NotificationList, NotificationResponse, TestNotification}, response_models::{BlockList, BlockListEntry, FriendInformation, FriendList, FriendRequestInformation, FriendRequests, MessageResponse, Pagination, UserList, UserPrivateInformation, UserPublicInformation}, user_profile::UserProfile, user_settings::UserSettings}};
+use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, notification_models::{FriendRequestNotification, NotificationList, NotificationResponse, TestNotification}, response_models::{BlockList, BlockListEntry, CountResponse, FriendInformation, FriendList, FriendRequestInformation, FriendRequests, MessageResponse, Pagination, UserList, UserPrivateInformation, UserPublicInformation}, user_profile::UserProfile, user_settings::UserSettings}};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -17,6 +17,7 @@ use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, notifica
         api::resources::friend::post_friend_request_deny,
         api::resources::metrics::get_metrics_usage,
         api::resources::notification::get_notification,
+        api::resources::notification::delete_notification,
         api::resources::ping::get_ping,  
         api::resources::timezone::get_timezone,
         api::resources::timezone::put_timezone,
@@ -39,7 +40,7 @@ use crate::api::{self, models::{enums::{PermissionLevel, PrivacyLevel}, notifica
     ),
     modifiers(&SecurityAddon),
     components(
-        schemas(MessageResponse, UserPublicInformation, UserPrivateInformation, UserSettings, UserList, Pagination, PrivacyLevel, PermissionLevel, FriendRequestInformation, FriendRequests, FriendInformation, FriendList, UserProfile, BlockList, BlockListEntry, NotificationList, NotificationResponse, FriendRequestNotification, TestNotification),
+        schemas(MessageResponse, UserPublicInformation, UserPrivateInformation, UserSettings, UserList, Pagination, PrivacyLevel, PermissionLevel, FriendRequestInformation, FriendRequests, FriendInformation, FriendList, UserProfile, BlockList, BlockListEntry, NotificationList, NotificationResponse, FriendRequestNotification, TestNotification, CountResponse),
     )
 )]
 pub struct ApiDoc;

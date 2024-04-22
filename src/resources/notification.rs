@@ -1,12 +1,15 @@
-use crate::api::entities::notification::find_notifications_by_receiver_key;
+use crate::api::entities::notification::{
+    clear_notifications_by_key, find_notifications_by_receiver_key,
+};
 use crate::api::models::notification_models::NotificationList;
 use crate::api::models::query_models::PaginationQuery;
-use crate::api::models::response_models::Pagination;
+use crate::api::models::response_models::{CountResponse, Pagination};
 use crate::api::security::authentication::ExtractUser;
 use crate::{unpack_result, AppState};
 use axum::extract::{Query, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use axum::routing::delete;
 use axum::{routing::get, Json, Router};
 use futures::{stream, StreamExt, TryStreamExt};
 
@@ -70,6 +73,41 @@ async fn get_notification(
 }
 // endregion: get_notification
 
+/// Clear your notifications.
+// region: delete_notification
+/// This endpoint allows you to clear all of your notifications.
+#[utoipa::path(
+    delete,
+    path = "/notification",
+    responses(
+        (status = 200, description = "Notifications cleared", body = CountResponse),
+        (status = 401, description = "Invalid API Key"),
+        (status = 500, description = "Server error"),
+    ),
+    security(
+        ("api_key" = [])
+    ),
+    tag = "Notification"
+)]
+async fn delete_notification(
+    ExtractUser(user): ExtractUser,
+    State(state): State<AppState>,
+) -> Response {
+    let count = unpack_result!(
+        clear_notifications_by_key(&state.database.notification_collection, &user.key).await,
+        "An error occured while clearing notifications"
+    );
+
+    Json(CountResponse {
+        message: format!("Cleared {} notification(s)", count),
+        count,
+    })
+    .into_response()
+}
+// endregion: delete_notification
+
 pub fn router() -> Router<AppState> {
-    Router::<AppState>::new().route("/notification", get(get_notification))
+    Router::<AppState>::new()
+        .route("/notification", get(get_notification))
+        .route("/notification", delete(delete_notification))
 }

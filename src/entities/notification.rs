@@ -85,6 +85,15 @@ pub async fn find_notifications_by_receiver_key(
     Ok(notifications)
 }
 
+pub async fn clear_notifications_by_key(
+    collection: &Collection<Notification>,
+    key: &str,
+) -> mongodb::error::Result<u64> {
+    let filter = doc! {"common.receiver_key": key};
+    let result = collection.delete_many(filter, None).await?;
+    Ok(result.deleted_count)
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct CommonFields {
     pub created_at: u64,

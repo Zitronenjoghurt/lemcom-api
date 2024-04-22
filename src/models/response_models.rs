@@ -8,6 +8,12 @@ pub struct MessageResponse {
     pub message: String,
 }
 
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct CountResponse {
+    pub message: String,
+    pub count: u64,
+}
+
 /// Private user information only accessible by yourself
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct UserPrivateInformation {
