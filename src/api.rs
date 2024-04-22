@@ -13,6 +13,7 @@ pub mod entities {
 #[path = "./models"]
 pub mod models {
     pub mod enums;
+    pub mod notification_models;
     pub mod query_models;
     pub mod response_models;
     pub mod user_profile;

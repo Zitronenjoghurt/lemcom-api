@@ -1,12 +1,20 @@
+use axum::async_trait;
 use futures::TryStreamExt;
 use mongodb::{
     bson::{self, doc, oid::ObjectId, Bson},
+    error::Error,
     options::{InsertOneOptions, UpdateOptions},
     Collection,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::api::utils::time_operations::timestamp_now_nanos;
+use crate::api::{
+    database::db::DB,
+    models::notification_models::{FriendRequestNotification, NotificationResponse},
+    utils::time_operations::{nanos_to_date, timestamp_now_nanos},
+};
+
+use super::user::{find_user_by_key, User};
 
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -44,6 +52,27 @@ impl Notification {
             .save(collection)
             .await
     }
+
+    pub async fn into_response(
+        self,
+        viewer_user: User,
+        database: DB,
+    ) -> Result<NotificationResponse, Error> {
+        match self {
+            Notification::FriendRequestReceived(friend_request) => {
+                friend_request.into_response(viewer_user, database).await
+            }
+        }
+    }
+}
+
+#[async_trait]
+pub trait IntoNotificationResponse {
+    async fn into_response(
+        self,
+        viewer_user: User,
+        database: DB,
+    ) -> Result<NotificationResponse, Error>;
 }
 
 pub async fn find_notifications_by_receiver_key(
@@ -86,5 +115,23 @@ impl FriendRequestReceived {
             common: CommonFields::new(receiver_key),
             sender_key: sender_key.to_string(),
         }
+    }
+}
+
+#[async_trait]
+impl IntoNotificationResponse for FriendRequestReceived {
+    async fn into_response(
+        self,
+        viewer_user: User,
+        database: DB,
+    ) -> Result<NotificationResponse, Error> {
+        let user = find_user_by_key(&database.user_collection, &self.sender_key).await?;
+        let user_information =
+            user.map(|u| u.public_information(false, false, &viewer_user.timezone));
+        let response = NotificationResponse::FriendRequest(FriendRequestNotification {
+            sender: user_information,
+            date: nanos_to_date(self.common.created_at, &viewer_user.timezone),
+        });
+        Ok(response)
     }
 }
