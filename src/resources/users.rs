@@ -39,10 +39,13 @@ async fn get_users(
     let page = pagination.page.unwrap_or(1);
     let page_size = pagination.page_size.unwrap_or(10);
 
+    let mut excluded_keys: Vec<String> = user.block_list.keys().cloned().collect();
+    excluded_keys.push(user.key.clone());
+
     let (users, pagination) = unpack_result!(
         get_public_users(
             &state.database.user_collection,
-            user.block_list.keys().cloned().collect(),
+            excluded_keys,
             &user.key,
             page,
             page_size
