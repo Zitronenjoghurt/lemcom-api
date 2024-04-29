@@ -85,6 +85,9 @@ pub struct UserProfileEdit {
     /// MAX LENGTH: 32 | One word describing your current mood
     #[validate(length(min = 1, max = 32))]
     pub mood: Option<String>,
+    /// MAX ITEMS: 20 | List of interests, each a one-word descriptor
+    #[validate(length(min = 0, max = 20))]
+    pub interests: Option<Vec<String>>,
 }
 
 impl UserProfileEdit {
@@ -106,6 +109,10 @@ impl UserProfileEdit {
                 .mood
                 .as_ref()
                 .map(|mood| sanitize::profanity(&sanitize::limit_string(mood, 32))),
+            interests: self
+                .interests
+                .as_ref()
+                .map(|interests| sanitize::limit_strings(interests, 128, true)),
         }
     }
 }

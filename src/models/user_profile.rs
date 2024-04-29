@@ -17,6 +17,9 @@ pub struct UserProfile {
     /// One word describing the users current mood
     #[serde(default)]
     pub mood: String,
+    /// One word describing the users current mood
+    #[serde(default)]
+    pub interests: Vec<String>,
 }
 
 impl UserProfile {
@@ -32,6 +35,9 @@ impl UserProfile {
         }
         if let Some(new_value) = &data.mood {
             self.mood = new_value.clone();
+        }
+        if let Some(new_value) = &data.interests {
+            self.interests = new_value.clone();
         }
     }
 }
